@@ -486,6 +486,16 @@ class Trader(TradeDB, Base):
                 print(f'- Ignored {account_name}')
                 return True
 
+    def calc_bulk_price(self, item_price: int, item_stock: int) -> tuple:
+        """Calculate max_bulk_price and item_stock amount"""
+        bulk_price = item_price * item_stock
+        if bulk_price > self.max_bulk_price:
+            item_stock = math.floor(self.max_bulk_price / item_price)
+            if (item_stock / 5) >= 4:  # round stock to 5
+                item_stock = math.floor(item_stock / 5) * 5
+            bulk_price = item_price * item_stock
+        return (round(bulk_price), item_stock)
+
     def build_cleaned_data(self, data: dict, trade_item: dict) -> list:
         """Clean/filter response for bulk data"""
         cleaned_data = []
@@ -502,16 +512,23 @@ class Trader(TradeDB, Base):
             item_indexed = obj['indexed']
             whisper = obj['whisper'].format(
                 obj['offers'][0]['item']['whisper'],
-                obj['offers'][0]['exchange']['whisper'])
+                obj['offers'][0]['exchange']['whisper'].replace('{0}', '{1}'))
 
             """data logic/manipulations here"""
             if self.check_account_ignored(account_name):
                 continue
-            if item_sell_amount > 1:  # proportions calc buy price
+            if 'fossil' in item_sell_id and item_sell_stock > 20:  # test/remove this logic
+                """limit fossils to 20 per trade"""
+                item_sell_stock = 20
+            if item_sell_amount > 1:
+                """If item price listed in proportions"""
                 item_buy_price = item_buy_price / item_sell_amount
             if item_buy_price > trade_item['max_stock_price']:
+                """If max_price reached - skip"""
                 continue
-            """TODO: buy bulk item logic"""
+
+            bulk_price, item_sell_stock = self.calc_bulk_price(item_buy_price, item_sell_stock)
+            whisper = whisper.format(item_sell_stock, bulk_price)
 
             cleaned_data.append({
                 'account_name': account_name,
@@ -525,16 +542,10 @@ class Trader(TradeDB, Base):
                 'item_indexed': item_indexed,
                 'whisper': whisper,
             })
-        print('LENGTH', len(cleaned_data))
-        from pprint import pprint
-        pprint(cleaned_data[:1])
         return cleaned_data
 
-    def smart_whispers(self, data, trade_item, db_conn) -> None:
-        pass
-
-    def smart_whispers_old(self, data_list, trade_item, db_conn):
-        for data in data_list:
+    def smart_whispers(self, data, trade_item, db_conn):
+        for obj in data:
             if not self.trader_switch:
                 print('- Trader Stopped in smart_whispers')
                 trade_stop_at = datetime.now()
@@ -549,19 +560,19 @@ class Trader(TradeDB, Base):
                     with self.whisper_queue.mutex:  # thread safe operation
                         self.whisper_queue.queue.clear()
                     break
-            account_name = str(data['account_name'])
-            account_last_char_name = str(data['account_last_char_name'])
-            item_price_amount = data['item_price_amount']
+            account_name = str(obj['account_name'])
+            account_last_char_name = str(obj['account_last_char_name'])
+            item_price_amount = obj['item_price_amount']
             item_stack_size = int(
-                data['item_stack_size']) if data['item_stack_size'] else 1
-            item_price_currency = data['item_price_currency']
-            item_name = data['item_type_line'] if data['item_type_line'] \
-                else data['item_name']
-            whisper = data['whisper']
+                obj['item_stack_size']) if obj['item_stack_size'] else 1
+            item_price_currency = obj['item_price_currency']
+            item_name = obj['item_type_line'] if obj['item_type_line'] \
+                else obj['item_name']
+            whisper = obj['whisper']
             time_now = str(datetime.now())
-            if not data['account_online']:
+            if not obj['account_online']:
                 continue
-            if not data['account_online'].get('status', None):
+            if not obj['account_online'].get('status', None):
                 current_trade_user = self.db_get_object(db_conn, 'trade_users', 'acc_name', account_name)
                 if current_trade_user:
                     # Check last_trade_request - prevent spam
