@@ -1,0 +1,25 @@
+{
+    "query": {
+        "status": {
+            "option": "online"
+        },
+        "type": "Prismatic Fossil",
+        "filters": {
+            "trade_filters": {
+                "disabled": false,
+                "sale_type": {
+                    "option": "priced"
+                },
+                "filters": {
+                    "price": {
+                        "min": 2,
+                        "max": 6
+                    }
+                }
+            }
+        }
+    },
+    "sort": {
+        "price": "asc"
+    }
+}

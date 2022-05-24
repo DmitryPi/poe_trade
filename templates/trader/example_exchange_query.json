@@ -1,0 +1,12 @@
+{
+    "exchange": {
+        "status": {
+            "option": "online"
+        },
+        "have": ["chaos"],
+        "want": ["rusted-breach-scarab"]
+    },
+    "sort": {
+        "price": "asc"
+    }
+}

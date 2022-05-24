@@ -1,0 +1,94 @@
+{
+    "verified": true,
+    "w": 1,
+    "h": 4,
+    "ilvl": 84,
+    "icon": "https://web.poecdn.com/image/Art/2DItems/Weapons/OneHandWeapons/Rapiers/AssassinationUnique2.png?scale=1&scaleIndex=0&w=1&h=4",
+    "league": "Betrayal",
+    "sockets": [
+        {
+            "group": 0,
+            "attr": "D",
+            "sColour": "G"
+        }, {
+            "group": 0,
+            "attr": "I",
+            "sColour": "B"
+        }, {
+            "group": 0,
+            "attr": "D",
+            "sColour": "G"
+        }
+    ],
+    "name": "Paradoxica",
+    "typeLine": "Vaal Rapier",
+    "identified": true,
+    "properties": [
+        {
+            "name": "One Handed Sword",
+            "values": [],
+            "displayMode": 0
+        }, {
+            "name": "Physical Damage",
+            "values": [
+                ["22-87", 0]
+            ],
+            "displayMode": 0,
+            "type": 9
+        }, {
+            "name": "Critical Strike Chance",
+            "values": [
+                ["6.50%", 0]
+            ],
+            "displayMode": 0,
+            "type": 12
+        }, {
+            "name": "Attacks per Second",
+            "values": [
+                ["1.30", 0]
+            ],
+            "displayMode": 0,
+            "type": 13
+        }, {
+            "name": "Weapon Range",
+            "values": [
+                ["12", 0]
+            ],
+            "displayMode": 0,
+            "type": 14
+        }
+    ],
+    "requirements": [
+        {
+            "name": "Level",
+            "values": [
+                ["66", 0]
+            ],
+            "displayMode": 0
+        }, {
+            "name": "Dex",
+            "values": [
+                ["212", 0]
+            ],
+            "displayMode": 1
+        }
+    ],
+    "implicitMods": [
+        "+25% to Global Critical Strike Multiplier"
+    ],
+    "explicitMods": [
+        "Attacks with this Weapon deal Double Damage"
+    ],
+    "veiledMods": [
+        "Prefix06",
+        "Suffix02"
+    ],
+    "flavourText": [
+        "What has no siblings but is always a twin?"
+    ],
+    "frameType": 3,
+    "category": {
+        "weapons": ["onesword"]
+    },
+    "socketedItems": []
+}

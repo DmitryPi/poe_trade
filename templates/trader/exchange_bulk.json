@@ -1,0 +1,13 @@
+{
+    "engine": "new",
+    "exchange": {
+        "status": {
+            "option": "online"
+        },
+        "have": {{have_item}},
+        "want": {{want_item}}
+    },
+    "sort": {
+        "price": "asc"
+    }
+}

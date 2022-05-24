@@ -1,0 +1,14 @@
+{
+  "query": {
+    "status": {
+      "option": "online"
+    },
+    "have": {{have_item}},
+    "want": {{want_item}},
+    "minimum": {{min_stock_amount}}
+  },
+  "sort": {
+    "have": "asc"
+  },
+  "engine": "new"
+}
