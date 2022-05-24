@@ -487,9 +487,9 @@ class Trader(TradeDB, Base):
                 return True
 
     def build_cleaned_data(self, data: dict, trade_item: dict) -> list:
+        """Clean/filter response for bulk data"""
         cleaned_data = []
-        keys = data['result'].keys()  # result has list of trade_id objects
-        for key in keys:
+        for key in data['result'].keys():  # result has list of trade_id objects
             obj = data['result'][key]['listing']
             account_name = obj['account']['name']
             account_last_char_name = obj['account']['lastCharacterName']
@@ -499,12 +499,19 @@ class Trader(TradeDB, Base):
             item_sell_id = obj['offers'][0]['item']['currency']
             item_sell_amount = obj['offers'][0]['item']['amount']
             item_sell_stock = obj['offers'][0]['item']['stock']
+            item_indexed = obj['indexed']
+            whisper = obj['whisper'].format(
+                obj['offers'][0]['item']['whisper'],
+                obj['offers'][0]['exchange']['whisper'])
 
             """data logic/manipulations here"""
             if self.check_account_ignored(account_name):
                 continue
-            if item_sell_amount > 1:  # proportions price calc
+            if item_sell_amount > 1:  # proportions calc buy price
                 item_buy_price = item_buy_price / item_sell_amount
+            if item_buy_price > trade_item['max_stock_price']:
+                continue
+            """TODO: buy bulk item logic"""
 
             cleaned_data.append({
                 'account_name': account_name,
@@ -515,10 +522,12 @@ class Trader(TradeDB, Base):
                 'item_sell_id': item_sell_id,
                 'item_sell_amount': item_sell_amount,
                 'item_sell_stock': item_sell_stock,
+                'item_indexed': item_indexed,
+                'whisper': whisper,
             })
         print('LENGTH', len(cleaned_data))
         from pprint import pprint
-        pprint(cleaned_data[:2] + '\n')
+        pprint(cleaned_data[:1])
         return cleaned_data
 
     def smart_whispers(self, data, trade_item, db_conn) -> None:
