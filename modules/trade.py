@@ -237,7 +237,8 @@ class Trader(TradeDB, Base):
         if bulk:
             template_rendered = template.render(
                 have_item=[trade_item['buyout_currency']],
-                want_item=[trade_item['item_id']]
+                want_item=[trade_item['item_id']],
+                min_stock_amount=trade_item['min_stock_amount']
             ).replace("'", '"')
         else:
             template_rendered = template.render(
@@ -260,35 +261,27 @@ class Trader(TradeDB, Base):
             with open(filename, 'w+') as file:
                 file.write('')
 
-    def proxy_rotate(self, protocol='http'):
-        proxy_index = random.randint(0, len(self.proxies) - 1)
-        proxy = self.proxies[proxy_index]
-        self.proxy = {
+    def proxy_rotate(self, protocol='http') -> dict:
+        proxy = random.choice(self.proxies)
+        proxy = {
             protocol: '{0}://{1}:{2}@{3}:{4}'.format(
                 protocol, proxy[2], proxy[3], proxy[0], proxy[1])
         }
-        # print('- Proxy: ', self.proxy[protocol])
+        print('- Proxy: ', proxy[protocol])
+        return proxy
 
-    def api_request(self, trade_item, bulk=False, cf=True):
+    def api_request(self, trade_item: dict, bulk=False) -> dict:
         print('- Requesting Trade API')
         template = self.load_trade_template(trade_item, bulk=bulk)
         bulk_url = f'{self.trade_api_url}/exchange/{self.trade_league}'
         nobulk_url = f'{self.trade_api_url}/search/{self.trade_league}'
+        url = bulk_url if bulk else nobulk_url
+        self.proxy = self.proxy_rotate()
+        scraper = cfscrape.create_scraper()
+        resp = scraper.post(url, json=template, proxies=self.proxy, timeout=7)
+        return json.loads(resp.content)
 
-        self.proxy_rotate()
-        if bulk:
-            if cf:
-                scraper = cfscrape.create_scraper()
-                resp = scraper.post(
-                    bulk_url, json=template, proxies=self.proxy, timeout=7)
-            else:
-                resp = requests.post(bulk_url, json=template)
-        else:
-            resp = requests.post(nobulk_url, json=template)
-        print('- Response:', resp.status_code)
-        return resp
-
-    def api_response(self, resp, trade_item, bulk=False):
+    def api_response_old(self, resp, trade_item, bulk=False):
         """Paginate initial POST response"""
         resp = json.loads(resp.content)
         resp_id = resp['id']
@@ -301,7 +294,7 @@ class Trader(TradeDB, Base):
             for i in range(0, len(resp_result), resp_pagin_step)]
         return (resp_id, resp_pagin)
 
-    def api_fetch_page(self, resp_id, page_ids, bulk=False, cf=True):
+    def api_fetch_page_old(self, resp_id, page_ids, bulk=False, cf=True):
         """Fetch page items with resp_id and page_ids"""
         page = ','.join(page_ids)
         fetch_url = f"{self.trade_api_url}/fetch/{page}"
@@ -319,10 +312,17 @@ class Trader(TradeDB, Base):
             )
         return resp
 
-    def api_fetch_pages(self, resp, trade_item, bulk=False, delay=0.15):
+    def api_fetch_pages_old(self, resp, trade_item, bulk=False, delay=0.15):
         """
         Fetch pages item data and build/filter it
-        TODO: Testing
+        resp_pagin = self.api_response(
+            resp,
+            trade_item,
+            bulk=is_bulk)
+        cleaned_data = self.api_fetch_pages(
+            resp_pagin,
+            trade_item,
+            bulk=is_bulk)
         """
         resp_id, resp_pagin = resp
         cleaned_data = []
@@ -373,7 +373,7 @@ class Trader(TradeDB, Base):
         print(data)
         return data
 
-    def build_cleaned_data(
+    def build_cleaned_data_old(
             self, data, currency,
             bulk_data=False, max_price=None,
             max_stock_price=0, min_stock_amount=1):
@@ -454,7 +454,6 @@ class Trader(TradeDB, Base):
                     'item_price_amount': item_price_amount,
                     'item_price_currency': item_price_currency,
                     'item_stack_size': item_stack_size,
-                    'item_id': item_id,
                     'item_name': item_name,
                     'item_type_line': item_type_line,
                     'item_art_filename': item_art_filename,
@@ -481,7 +480,51 @@ class Trader(TradeDB, Base):
             self.keyboard_paste()
             self.keyboard_enter()
 
-    def smart_whispers(self, data_list, trade_item, db_conn):
+    def check_account_ignored(self, account_name):
+        for user in self.trade_ignored_users:
+            if account_name.lower() == user[1]:
+                print(f'- Ignored {account_name}')
+                return True
+
+    def build_cleaned_data(self, data: dict, trade_item: dict) -> list:
+        cleaned_data = []
+        keys = data['result'].keys()  # result has list of trade_id objects
+        for key in keys:
+            obj = data['result'][key]['listing']
+            account_name = obj['account']['name']
+            account_last_char_name = obj['account']['lastCharacterName']
+            account_online = obj['account']['online']
+            item_buy_price = obj['offers'][0]['exchange']['amount']
+            item_buy_currency = obj['offers'][0]['exchange']['currency']
+            item_sell_id = obj['offers'][0]['item']['currency']
+            item_sell_amount = obj['offers'][0]['item']['amount']
+            item_sell_stock = obj['offers'][0]['item']['stock']
+
+            """data logic/manipulations here"""
+            if self.check_account_ignored(account_name):
+                continue
+            if item_sell_amount > 1:  # proportions price calc
+                item_buy_price = item_buy_price / item_sell_amount
+
+            cleaned_data.append({
+                'account_name': account_name,
+                'account_last_char_name': account_last_char_name,
+                'account_online': account_online,
+                'item_buy_price': item_buy_price,
+                'item_buy_currency': item_buy_currency,
+                'item_sell_id': item_sell_id,
+                'item_sell_amount': item_sell_amount,
+                'item_sell_stock': item_sell_stock,
+            })
+        print('LENGTH', len(cleaned_data))
+        from pprint import pprint
+        pprint(cleaned_data[:2] + '\n')
+        return cleaned_data
+
+    def smart_whispers(self, data, trade_item, db_conn) -> None:
+        pass
+
+    def smart_whispers_old(self, data_list, trade_item, db_conn):
         for data in data_list:
             if not self.trader_switch:
                 print('- Trader Stopped in smart_whispers')
@@ -575,7 +618,6 @@ class Trader(TradeDB, Base):
         trade_items = self.load_json_file(trade_items_file)
         trade_items_len = len(trade_items)
         trade_item_counter = 0
-        cleaned_data = []
 
         while True:
             if self.trader_switch:
@@ -595,20 +637,11 @@ class Trader(TradeDB, Base):
                     continue
 
                 try:
-                    is_bulk = bool(
-                        trade_item['type'] in self.trade_bulk_types)
-                    resp = self.api_request(trade_item, bulk=is_bulk)
-                    resp_pagin = self.api_response(
-                        resp,
-                        trade_item,
-                        bulk=is_bulk)
-                    cleaned_data = self.api_fetch_pages(
-                        resp_pagin,
-                        trade_item,
-                        bulk=is_bulk)
+                    is_bulk = bool(trade_item['type'] in self.trade_bulk_types)
+                    response = self.api_request(trade_item, bulk=is_bulk)
+                    response = self.build_cleaned_data(response, trade_item)
                     with db_conn:
-                        self.smart_whispers(
-                            cleaned_data, trade_item, db_conn)
+                        self.smart_whispers(response, trade_item, db_conn)
                 except Exception as e:
                     raise e
                     api_err_msg = "Can't access Trade API\n"
