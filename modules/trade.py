@@ -210,7 +210,7 @@ class Trader(TradeDB, Base):
         Base.__init__(self)
         TradeDB.__init__(self)
         self.trader_config = self.app_config['TRADER']
-        self.trader_switch = 1
+        self.trader_switch = 0
         self.trade_api_url = self.trader_config['trade_api_url']
         self.trade_items_file = self.trader_config['trade_items_file']
         self.trade_single_template = self.trader_config['trade_single_tmplt']
@@ -610,75 +610,6 @@ class Trader(TradeDB, Base):
             self.whisper_queue.put((current_trade_user, obj['whisper']))
             time.sleep(current_trade_user[-2] / self.priority_sleep)  # 10 / 1.n
 
-    def smart_whispers_old(self, data_list, trade_item, db_conn):
-        for data in data_list:
-            if not self.trader_switch:
-                print('- Trader Stopped in smart_whispers')
-                trade_stop_at = datetime.now()
-                while True:
-                    if self.trader_switch:
-                        print('- Trader Continue in smart_whispers')
-                        break
-                    time.sleep(0.2)
-                trade_stop_passed = self.get_datetime_passed_seconds(
-                    datetime.now(), time_now=trade_stop_at, reverse=True)
-                if trade_stop_passed >= 60:
-                    with self.whisper_queue.mutex:  # thread safe operation
-                        self.whisper_queue.queue.clear()
-                    break
-            account_name = str(data['account_name'])
-            account_last_char_name = str(data['account_last_char_name'])
-            item_price_amount = data['item_price_amount']
-            item_stack_size = int(
-                data['item_stack_size']) if data['item_stack_size'] else 1
-            item_price_currency = data['item_price_currency']
-            item_name = data['item_type_line'] if data['item_type_line'] \
-                else data['item_name']
-            whisper = data['whisper']
-            time_now = str(datetime.now())
-            if not data['account_online']:
-                continue
-            if not data['account_online'].get('status', None):
-                current_trade_user = self.db_get_object(db_conn, 'trade_users', 'acc_name', account_name)
-                if current_trade_user:
-                    # Check last_trade_request - prevent spam
-                    last_trade_sec = self.get_datetime_passed_seconds(current_trade_user[-3])
-
-                    if last_trade_sec > 0 and last_trade_sec < self.no_spam_delay:
-                        # print('- Skipped %s : %s' % (account_name, account_last_char_name))
-                        continue
-
-                if not current_trade_user:
-                    trade_user = (
-                        account_name,
-                        account_last_char_name,
-                        trade_item['type'],
-                        trade_item['item_id'],
-                        item_name,
-                        item_price_amount,
-                        item_stack_size,
-                        item_price_currency,
-                        time_now,
-                    )
-                    self.db_create_object(db_conn, self.sql_insert_trade_user, trade_user)
-                else:
-                    trade_user = (
-                        account_last_char_name,
-                        trade_item['type'],
-                        trade_item['item_id'],
-                        item_name,
-                        item_price_amount,
-                        item_stack_size,
-                        item_price_currency,
-                        account_name,
-                    )
-                    self.db_update_object(db_conn, self.sql_update_trade_user, trade_user)
-                current_trade_user = self.db_get_object(db_conn, 'trade_users', 'acc_name', account_name)
-                if not current_trade_user:
-                    continue
-                self.whisper_queue.put((current_trade_user, whisper))
-                time.sleep(current_trade_user[-2] / self.priority_sleep)  # 10 / 1.n
-
     def manage_trade_whisper_queue(self):
         db_conn = self.db_create_connection()
         while True:
@@ -687,7 +618,7 @@ class Trader(TradeDB, Base):
                 continue
             current_trade_user, whisper = self.whisper_queue.get()
             print("- Sent whisper to %s : %s" % (current_trade_user[1], current_trade_user[2]))
-            self.send_whisper(whisper)
+            # self.send_whisper(whisper)
             self.db_update_trade_user_priority(db_conn, current_trade_user, str(datetime.now()))
             time.sleep(0.5)
             self.whisper_queue.task_done()
