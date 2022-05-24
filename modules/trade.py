@@ -507,6 +507,7 @@ class Trader(TradeDB, Base):
             item_buy_price = obj['offers'][0]['exchange']['amount']
             item_buy_currency = obj['offers'][0]['exchange']['currency']
             item_sell_id = obj['offers'][0]['item']['currency']
+            item_sell_name = ' '.join([i.capitalize() for i in item_sell_id.split('-')])
             item_sell_amount = obj['offers'][0]['item']['amount']
             item_sell_stock = obj['offers'][0]['item']['stock']
             item_indexed = obj['indexed']
@@ -537,6 +538,7 @@ class Trader(TradeDB, Base):
                 'item_buy_price': item_buy_price,
                 'item_buy_currency': item_buy_currency,
                 'item_sell_id': item_sell_id,
+                'item_sell_name': item_sell_name,
                 'item_sell_amount': item_sell_amount,
                 'item_sell_stock': item_sell_stock,
                 'item_indexed': item_indexed,
@@ -544,8 +546,72 @@ class Trader(TradeDB, Base):
             })
         return cleaned_data
 
-    def smart_whispers(self, data, trade_item, db_conn):
+    def smart_whispers(self, db_conn, data: list, trade_item: dict) -> None:
         for obj in data:
+            if not self.trader_switch:
+                """If trader_switch was set False during operation, save/update queue result"""
+                print(f'- Trader stopped in {self.__name__}')
+                now = datetime.now()
+                while True:
+                    if self.trader_switch:
+                        print('- Trader Continue in smart_whispers')
+                        break
+                    time.sleep(0.2)
+                passed = self.get_datetime_passed_seconds(
+                    datetime.now(), time_now=now, reverse=True)
+                if passed >= 60:
+                    with self.whisper_queue.mutex:  # thread safe operation
+                        self.whisper_queue.queue.clear()
+                    break
+
+            if not obj['account_online'] or obj['account_online'].get('status', None):
+                """Skip afk and unknown users"""
+                continue
+
+            current_trade_user = self.db_get_object(
+                db_conn, 'trade_users', 'acc_name', obj['account_name'])
+
+            if current_trade_user:
+                """Check last_trade_request - prevent spam"""
+                last_trade_sec = self.get_datetime_passed_seconds(current_trade_user[-3])
+                if last_trade_sec > 0 and last_trade_sec < self.no_spam_delay:
+                    print('- Skipped %s : %s' % (
+                        obj['account_name'], obj['account_last_char_name']))
+                    continue
+                """Update current_trade_user data"""
+                trade_user = (
+                    obj['account_last_char_name'],
+                    trade_item['type'],
+                    obj['item_sell_id'],
+                    obj['item_sell_name'],
+                    obj['item_buy_price'],
+                    obj['item_sell_stock'],
+                    obj['item_buy_currency'],
+                    obj['account_name'],
+                )
+                self.db_update_object(db_conn, self.sql_update_trade_user, trade_user)
+            else:
+                trade_user = (
+                    obj['account_name'],
+                    obj['account_last_char_name'],
+                    trade_item['type'],
+                    obj['item_sell_id'],
+                    obj['item_sell_name'],
+                    obj['item_buy_price'],
+                    obj['item_sell_stock'],
+                    obj['item_buy_currency'],
+                    str(datetime.now()),
+                )
+                self.db_create_object(db_conn, self.sql_insert_trade_user, trade_user)
+                current_trade_user = self.db_get_object(
+                    db_conn, 'trade_users', 'acc_name', obj['account_name'])
+                if not current_trade_user:
+                    continue
+            self.whisper_queue.put((current_trade_user, obj['whisper']))
+            time.sleep(current_trade_user[-2] / self.priority_sleep)  # 10 / 1.n
+
+    def smart_whispers_old(self, data_list, trade_item, db_conn):
+        for data in data_list:
             if not self.trader_switch:
                 print('- Trader Stopped in smart_whispers')
                 trade_stop_at = datetime.now()
@@ -560,19 +626,19 @@ class Trader(TradeDB, Base):
                     with self.whisper_queue.mutex:  # thread safe operation
                         self.whisper_queue.queue.clear()
                     break
-            account_name = str(obj['account_name'])
-            account_last_char_name = str(obj['account_last_char_name'])
-            item_price_amount = obj['item_price_amount']
+            account_name = str(data['account_name'])
+            account_last_char_name = str(data['account_last_char_name'])
+            item_price_amount = data['item_price_amount']
             item_stack_size = int(
-                obj['item_stack_size']) if obj['item_stack_size'] else 1
-            item_price_currency = obj['item_price_currency']
-            item_name = obj['item_type_line'] if obj['item_type_line'] \
-                else obj['item_name']
-            whisper = obj['whisper']
+                data['item_stack_size']) if data['item_stack_size'] else 1
+            item_price_currency = data['item_price_currency']
+            item_name = data['item_type_line'] if data['item_type_line'] \
+                else data['item_name']
+            whisper = data['whisper']
             time_now = str(datetime.now())
-            if not obj['account_online']:
+            if not data['account_online']:
                 continue
-            if not obj['account_online'].get('status', None):
+            if not data['account_online'].get('status', None):
                 current_trade_user = self.db_get_object(db_conn, 'trade_users', 'acc_name', account_name)
                 if current_trade_user:
                     # Check last_trade_request - prevent spam
@@ -661,7 +727,7 @@ class Trader(TradeDB, Base):
                     response = self.api_request(trade_item, bulk=is_bulk)
                     response = self.build_cleaned_data(response, trade_item)
                     with db_conn:
-                        self.smart_whispers(response, trade_item, db_conn)
+                        self.smart_whispers(db_conn, response, trade_item)
                 except Exception as e:
                     raise e
                     api_err_msg = "Can't access Trade API\n"
