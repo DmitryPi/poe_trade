@@ -135,7 +135,7 @@ if __name__ == '__main__':
 
     trade_item_files = [
         'trade_items.json',
-        # 'solo_items.json',
+        'solo_items.json',
         # 'slow_items.json',
     ]
     key_presser = KeyPresser()

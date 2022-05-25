@@ -493,7 +493,7 @@ class Trader(TradeDB, Base):
     def check_account_ignored(self, account_name):
         for user in self.trade_ignored_users:
             if account_name.lower() == user[1]:
-                print(f'- Ignored {account_name}')
+                # print(f'- Ignored {account_name}')
                 return True
 
     def calc_bulk_price(self, item_price: int, item_stock: int) -> tuple:
@@ -669,12 +669,12 @@ class Trader(TradeDB, Base):
                     response = self.build_cleaned_data(response, trade_item)
                     with db_conn:
                         self.smart_whispers(db_conn, response, trade_item)
-                    time.sleep(4)
+                    time.sleep(5)
                 except Exception as e:
                     sleep_duration = 60
                     api_err_msg = "Can't access Trade API\n"
                     api_overuse_msg = api_err_msg + f'API overuse - Sleep {sleep_duration}s'
-                    if 'result' in repr(e) or 'id' in repr(e):
+                    if 'result' in repr(e) or 'id' in repr(e) or '429' in repr(e):
                         # self.log_error(e)
                         print(repr(e))
                         print(api_overuse_msg)
@@ -1037,14 +1037,12 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
         if accept:
             x_btn = int(coords[0] + 100)
             y_btn = int(coords[1] + 130)
-            self.mouse_move_click(x_btn, y_btn, delay=False)
-            pyautogui.click()
         else:
             x_btn = int(coords[0] + 300)
             y_btn = int(coords[1] + 130)
-            self.mouse_move_click(x_btn, y_btn, delay=False)
-            pyautogui.click()
-        self.mouse_move(1350, 500)
+        self.mouse_move(x_btn, y_btn)
+        time.sleep(0.1)
+        self.mouse_move_click(clicks=2, delay=False)
 
     def ocr_user_deduct(self, db_conn, ocr_text):
         user_amount = 15
