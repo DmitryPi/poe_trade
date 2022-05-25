@@ -1,5 +1,5 @@
 certifi==2021.10.8
-cfscrape==2.1.1
+cloudscraper
 charset-normalizer==2.0.12
 colorthief==0.2.1
 file-read-backwards==2.0.0

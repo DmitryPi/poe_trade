@@ -6,7 +6,7 @@ import json
 import requests
 import random
 import math
-import cfscrape
+import cloudscraper
 
 from datetime import datetime
 from jinja2 import Environment, PackageLoader
@@ -263,10 +263,20 @@ class Trader(TradeDB, Base):
 
     def proxy_rotate(self, protocol='http') -> dict:
         proxy = random.choice(self.proxies)
-        proxy = {
-            protocol: '{0}://{1}:{2}@{3}:{4}'.format(
-                protocol, proxy[2], proxy[3], proxy[0], proxy[1])
-        }
+        if len(proxy) == 2:
+            proxy = {
+                protocol: '{0}://{1}:{2}'.format(
+                    protocol, proxy[0], proxy[1]),
+                'https': '{0}://{1}:{2}'.format(
+                    protocol, proxy[0], proxy[1]),
+            }
+        else:
+            proxy = {
+                protocol: '{0}://{1}:{2}@{3}:{4}'.format(
+                    protocol, proxy[2], proxy[3], proxy[0], proxy[1]),
+                'https': '{0}://{1}:{2}@{3}:{4}'.format(
+                    protocol, proxy[2], proxy[3], proxy[0], proxy[1])
+            }
         print('- Proxy: ', proxy[protocol])
         return proxy
 
@@ -277,7 +287,7 @@ class Trader(TradeDB, Base):
         nobulk_url = f'{self.trade_api_url}/search/{self.trade_league}'
         url = bulk_url if bulk else nobulk_url
         self.proxy = self.proxy_rotate()
-        scraper = cfscrape.create_scraper()
+        scraper = cloudscraper.create_scraper()
         resp = scraper.post(url, json=template, proxies=self.proxy, timeout=7)
         return json.loads(resp.content)
 
@@ -301,7 +311,7 @@ class Trader(TradeDB, Base):
         param_key = 'exchange' if bulk else 'query'
         self.proxy_rotate()
         if cf:
-            scraper = cfscrape.create_scraper()
+            scraper = cloudscraper.create_scraper()
             resp = scraper.get(
                 fetch_url, params={param_key: resp_id},
                 proxies=self.proxy, timeout=5)
@@ -550,7 +560,7 @@ class Trader(TradeDB, Base):
         for obj in data:
             if not self.trader_switch:
                 """If trader_switch was set False during operation, save/update queue result"""
-                print(f'- Trader stopped in {self.__name__}')
+                print(f'- Trader stopped in smart_whispers')
                 now = datetime.now()
                 while True:
                     if self.trader_switch:
@@ -575,8 +585,8 @@ class Trader(TradeDB, Base):
                 """Check last_trade_request - prevent spam"""
                 last_trade_sec = self.get_datetime_passed_seconds(current_trade_user[-3])
                 if last_trade_sec > 0 and last_trade_sec < self.no_spam_delay:
-                    print('- Skipped %s : %s' % (
-                        obj['account_name'], obj['account_last_char_name']))
+                    # print('- Skipped %s : %s' % (
+                    #     obj['account_name'], obj['account_last_char_name']))
                     continue
                 """Update current_trade_user data"""
                 trade_user = (
@@ -659,7 +669,7 @@ class Trader(TradeDB, Base):
                     response = self.build_cleaned_data(response, trade_item)
                     with db_conn:
                         self.smart_whispers(db_conn, response, trade_item)
-                    time.sleep(10)
+                    time.sleep(4)
                 except Exception as e:
                     sleep_duration = 60
                     api_err_msg = "Can't access Trade API\n"
