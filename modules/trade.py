@@ -289,7 +289,7 @@ class Trader(TradeDB, Base):
         url = bulk_url if bulk else nobulk_url
         self.proxy = self.proxy_rotate()
         scraper = cloudscraper.create_scraper()
-        resp = scraper.post(url, json=template, proxies=self.proxy, timeout=7)
+        resp = scraper.post(url, json=template, proxies=self.proxy, timeout=15)
         return json.loads(resp.content)
 
     def api_response_old(self, resp, trade_item, bulk=False):
