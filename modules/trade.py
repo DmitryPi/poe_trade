@@ -629,6 +629,7 @@ class Trader(TradeDB, Base):
             current_trade_user, whisper = self.whisper_queue.get()
             print("- Sent whisper to %s : %s" % (current_trade_user[1], current_trade_user[2]))
             self.send_whisper(whisper)
+            time.sleep(1)
             self.db_update_trade_user_priority(db_conn, current_trade_user, str(datetime.now()))
             time.sleep(0.5)
             self.whisper_queue.task_done()
