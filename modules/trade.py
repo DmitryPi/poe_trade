@@ -708,8 +708,6 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
         self.STATES = {
             'START': 'START',
             'HIDEOUT': 'HIDEOUT',
-            'MSG_WAIT': 'MSG_WAIT',
-            'DEDUCT': 'DEDUCT',
             'PRETRADE': 'PRETRADE',
             'TRADE': 'TRADE',
         }
@@ -1419,8 +1417,6 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                                 break
                         elif 'challenge' in invite:
                             self.game_invite(invite, accept=False)
-            elif self.STATE == 'DEDUCT':
-                pass
             elif self.STATE == 'PRETRADE':
                 if not self.check_in_party():
                     self.set_state('START')
