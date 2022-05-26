@@ -790,6 +790,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                 'rusted-blight-scarab': 0.66,
                 'gilded-blight-scarab': 0.75,
                 'gilded-bestiary-scarab': 0.81,
+                'polished-divination-scarab': 0.81,
                 'gilded-divination-scarab': 0.81,
                 'rusted-expedition-scarab': 0.7,
                 'polished-expedition-scarab': 0.8,
