@@ -1286,6 +1286,12 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
         trade_passed = 0
         loading = False
         timer = 0
+
+        try:  # remove trade_summary on bot init
+            os.remove(self.trade_summary_path)
+        except FileNotFoundError:
+            pass
+
         while True:
             if not self.STATE:
                 current_trade_user = None
@@ -1465,6 +1471,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                                     self.sql_update_trade_user_priority,
                                     user_data
                                 )
+                            self.update_trade_summary(current_trade_user[4])
                             # self.action_send_ty(char_name=current_trade_user[2])
                             time.sleep(0.3)
                             self.action_command_chat(self.cmd_kick)
