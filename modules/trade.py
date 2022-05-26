@@ -697,6 +697,20 @@ class Trader(TradeDB, Base):
         return 0
 
 
+class Seller(ClientLog, KeyActions, OCRChecker):
+    def __init__(self):
+        self.trade_sell_queue = Queue()
+        ClientLog.__init__(self)
+        OCRChecker.__init__(self)
+        KeyActions.__init__(self)
+
+    """
+        0: Get bought items
+            if bought item > 100:
+                1: set_stash_price
+    """
+
+
 class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
     def __init__(self):
         self.whisper_queue = Queue()
@@ -1234,86 +1248,6 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
         self.pyperclip_copy(price_tmplt)
         self.keyboard_paste()
         self.keyboard_enter()
-
-    def run_seller(self):
-        """
-        HIDEOUT
-            check_prices
-            check_listed_items
-        TRADE
-            check_trade_msg
-            check_item: sold/price/location
-            invite_user
-        """
-        buy_user_list = []
-        loading = False
-        while True:
-            if not self.STATE:
-                self.set_state(self.STATES['HIDEOUT'])
-                continue
-            elif self.STATE == 'START':
-                self.app_window_focus()
-                if self.check_hideout():
-                    if self.check_stash_opened():
-                        self.check_remove_alerts()
-                        self.check_dump_items()
-                        self.set_state('HIDEOUT')
-                        continue
-                    else:
-                        self.check_open_stash()
-                else:
-                    if loading:
-                        if not self.check_loading():
-                            loading = False
-                        continue
-                    self.action_hideout_tp()
-                    if self.check_chat_opened():
-                        print('- Chat closed')
-                        pyautogui.press('enter')
-                    loading = True
-                    time.sleep(0.5)
-            elif self.STATE == 'HIDEOUT':
-                """
-                log buy massages - format buy msg
-                invite user
-                log party join/left msg/ho join
-                prepare item
-                recalculate price
-                give user / timer fallback / trade user queue
-                give item / wait for item / confirm item / accept trade / send ty / kick user
-                """
-                if self.check_stash_opened():
-                    self.stash_set_price('polished-bestiary-scarab', 6.5, proportion_size=10)
-                    time.sleep(1)
-                if buy_user_list:
-                    pass
-            elif self.STATE == 'SET_PRICE':
-                """
-                prices according to item_max_price + 1.5
-                when in ho with stash opened
-                get buy_item_list - loop set prices
-                    if not enough amount or < amount_threshold:
-                        set skip
-                get buy_item_amount (dont exist for now)
-                """
-                pass
-            elif self.STATE == 'SELL_WAIT':
-                """
-                analyze log msges by last minute
-                invite to party
-                send pm exalt conversion
-                if type scarab and amount > 60 resend pm with recalculation
-                check if accepted/joined ho
-                prepare item
-                """
-                pass
-            elif self.STATE == 'SELL_TRADE':
-                pass
-
-    def run_afk(self):
-        while True:
-            pyautogui.press('t')
-            time.sleep(5)
 
     def run_buyer(self):
         db_conn = self.db_create_connection()
