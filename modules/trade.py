@@ -1,3 +1,4 @@
+import os
 import re
 import time
 import pyautogui
@@ -641,14 +642,14 @@ class Trader(TradeDB, Base):
         self.trade_ignored_users = self.db_insert_default_ignored_users(db_conn)
         # check for new ignored_users in file
         self.db_insert_new_ignored_users(db_conn)
-
-        trade_items = self.load_json_file(trade_items_file, filepath='temp/')
+        trade_items_file = 'temp/' + trade_items_file
+        trade_items = self.load_json_file(trade_items_file)
         trade_items_len = len(trade_items)
         trade_item_counter = 0
 
         while True:
             if self.trader_switch:
-                new_trade_items = self.load_json_file(trade_items_file, filepath='temp/')
+                new_trade_items = self.load_json_file(trade_items_file)
                 if trade_items != new_trade_items:  # update trade_items
                     trade_items = new_trade_items
 
@@ -703,6 +704,7 @@ class Seller(ClientLog, KeyActions, OCRChecker):
         ClientLog.__init__(self)
         OCRChecker.__init__(self)
         KeyActions.__init__(self)
+        self.trade_summary_path = 'temp/trade_summary.json'
 
     """
         TradeBot save buy result
@@ -712,8 +714,15 @@ class Seller(ClientLog, KeyActions, OCRChecker):
                 1: set_stash_price
     """
 
-    def update_trade_summary(self, path,item_id):
-        pass
+    def update_trade_summary(self, trade_item_id):
+        if not os.path.exists(self.trade_summary_path):
+            with open(self.trade_summary_path, 'w', encoding='utf-8') as f:
+                f.write('[]')
+        data = self.load_json_file(self.trade_summary_path)
+        if trade_item_id in data:
+            pass
+        else:
+            pass
 
 
 class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):

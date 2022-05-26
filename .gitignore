@@ -2,6 +2,7 @@
 config.ini
 proxies.txt
 temp/trade_items_*.json
+temp/trade_summary.json
 temp/*.txt
 
 

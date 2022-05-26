@@ -73,17 +73,13 @@ class Base:
             config.write(configfile)
         return config
 
-    def load_json_file(self, filename, filepath=''):
-        if not filepath:
-            filepath = self.template_dir
-        with open(f'{filepath}{filename}', 'r') as json_file:
-            json_raw = json.load(json_file)
-            return json_raw
+    def load_json_file(self, filepath):
+        with open(f'{filepath}', 'r', encoding='utf-8') as json_file:
+            raw_json = json.load(json_file)
+            return raw_json
 
-    def update_json_file(self, data, filename, filepath=''):
-        if not filepath:
-            filepath = self.template_dir
-        with open(f'{filepath}{filename}', 'w') as json_file:
+    def update_json_file(self, data, filepath):
+        with open(f'{filepath}', 'w', encoding='utf-8') as json_file:
             json.dump(data, json_file, indent=4)
 
     def get_datetime_passed_seconds(self, time_stamp, time_now=None, reverse=False):
