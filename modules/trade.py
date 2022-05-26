@@ -210,7 +210,7 @@ class Trader(TradeDB, Base):
         Base.__init__(self)
         TradeDB.__init__(self)
         self.trader_config = self.app_config['TRADER']
-        self.trader_switch = 1
+        self.trader_switch = 0
         self.trade_api_url = self.trader_config['trade_api_url']
         self.trade_items_file = self.trader_config['trade_items_file']
         self.trade_single_template = self.trader_config['trade_single_tmplt']
