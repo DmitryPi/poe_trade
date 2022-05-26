@@ -211,7 +211,7 @@ class TradeDB(BaseDB):
         """Update DB user last_trade/priority/attempts"""
         attempts = trade_user[-1] - 1 if trade_user[-1] else 3
         priority = trade_user[-2] - 1 if not trade_user[-1] else trade_user[-2]
-        filepath = 'templates/db/ignored_accounts.txt'
+        filepath = 'temp/ignored_accounts.txt'
         if not priority:
             with open(filepath, 'a', encoding='utf-8') as ignored_users:
                 ignored_users.write(trade_user[1] + '\n')
@@ -224,7 +224,7 @@ class TradeDB(BaseDB):
 
     def db_insert_default_ignored_users(self, db_conn):
         ignored_users = self.db_get_all(db_conn, 'ignored_users')
-        filepath = 'templates/db/ignored_accounts.txt'
+        filepath = 'temp/ignored_accounts.txt'
         if not ignored_users:
             try:
                 with open(filepath, "r", encoding="utf8") as ignored_users:
@@ -251,7 +251,7 @@ class TradeDB(BaseDB):
               ValueError: I/O operation on closed file.
         """
         time.sleep(random.uniform(0.1, 0.3))  # prevent concurrent unique
-        with open("templates/db/ignored_accounts.txt", "r", encoding="utf8") as ignored_users:
+        with open("temp/ignored_accounts.txt", "r", encoding="utf8") as ignored_users:
             for user in ignored_users:
                 user = user.strip().lower()
                 account_ignored = [i for i in self.trade_ignored_users if user in i]

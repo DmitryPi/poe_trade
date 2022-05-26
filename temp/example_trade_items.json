@@ -1,0 +1,74 @@
+[
+    {
+      "item_id": "rusted-bestiary-scarab",
+      "buyout_currency": "chaos",
+      "type": "scarab",
+      "max_stock_price": 0,
+      "min_stock_amount": 2,
+      "disabled": false
+    },
+    {
+      "item_id": "polished-bestiary-scarab",
+      "buyout_currency": "chaos",
+      "type": "scarab",
+      "max_stock_price": 7,
+      "min_stock_amount": 2,
+      "disabled": true
+    },
+    {
+      "item_id": "gilded-bestiary-scarab",
+      "buyout_currency": "chaos",
+      "type": "scarab",
+      "max_stock_price": 13,
+      "min_stock_amount": 2,
+      "disabled": true
+    },
+    {
+        "item_id": "splinter-chayula",
+        "buyout_currency": "chaos",
+        "type": "fragment",
+        "min_stock_amount": 4,
+        "max_stock_price": 1,
+        "disabled": true
+    },
+    {
+        "item_id": "simulacrum-splinter",
+        "buyout_currency": "chaos",
+        "type": "fragment",
+        "min_stock_amount": 5,
+        "max_stock_price": 0.5,
+        "disabled": true
+    },
+    {
+        "item_id": "stacked-deck",
+        "buyout_currency": "chaos",
+        "type": "card",
+        "min_stock_amount": 2,
+        "max_stock_price": 1,
+        "disabled": true
+    },
+    {
+        "item_id": "the-polymath",
+        "buyout_currency": "chaos",
+        "type": "card",
+        "min_stock_amount": 1,
+        "max_stock_price": 0,
+        "disabled": true
+    },
+    {
+        "item_id": "bound-fossil",
+        "buyout_currency": "chaos",
+        "type": "fossil",
+        "min_stock_amount": 3,
+        "max_stock_price": 0,
+        "disabled": true
+    },
+    {
+        "item_id": "shuddering-fossil",
+        "buyout_currency": "chaos",
+        "type": "fossil",
+        "min_stock_amount": 2,
+        "max_stock_price": 0,
+        "disabled": true
+    }
+]

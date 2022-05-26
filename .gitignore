@@ -1,3 +1,10 @@
+# Project
+config.ini
+proxies.txt
+temp/trade_items_*.json
+temp/*.txt
+
+
 ### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -20,21 +27,11 @@ __pycache__/
 *.sqlite3
 *.db
 
-# config
-config.ini
 
 # ho
 assets/ui/ho.png
 assets/tests/tesseract/current_account_name.png
 assets/ui/current_party_icon.png
-
-# proxy
-proxies.txt
-
-
-# project
-templates/*.json
-templates/db
 
 
 # Distribution / packaging

@@ -9,7 +9,7 @@ import math
 import cloudscraper
 
 from datetime import datetime
-from jinja2 import Environment, PackageLoader
+from jinja2 import Environment, PackageLoader, select_autoescape
 from operator import itemgetter
 from file_read_backwards import FileReadBackwards
 from queue import Queue
@@ -210,7 +210,7 @@ class Trader(TradeDB, Base):
         Base.__init__(self)
         TradeDB.__init__(self)
         self.trader_config = self.app_config['TRADER']
-        self.trader_switch = 0
+        self.trader_switch = 1
         self.trade_api_url = self.trader_config['trade_api_url']
         self.trade_items_file = self.trader_config['trade_items_file']
         self.trade_single_template = self.trader_config['trade_single_tmplt']
@@ -230,9 +230,9 @@ class Trader(TradeDB, Base):
     def load_trade_template(self, trade_item, bulk=False):
         trade_template = self.trade_bulk_template if bulk \
             else self.trade_single_template
-        env = Environment(loader=PackageLoader(
-            'templates', 'trader'
-        ))
+        env = Environment(
+            loader=PackageLoader('templates', 'trader'),
+            autoescape=select_autoescape())
         template = env.get_template(trade_template)
         if bulk:
             template_rendered = template.render(
@@ -642,13 +642,13 @@ class Trader(TradeDB, Base):
         # check for new ignored_users in file
         self.db_insert_new_ignored_users(db_conn)
 
-        trade_items = self.load_json_file(trade_items_file)
+        trade_items = self.load_json_file(trade_items_file, filepath='temp/')
         trade_items_len = len(trade_items)
         trade_item_counter = 0
 
         while True:
             if self.trader_switch:
-                new_trade_items = self.load_json_file(trade_items_file)
+                new_trade_items = self.load_json_file(trade_items_file, filepath='temp/')
                 if trade_items != new_trade_items:  # update trade_items
                     trade_items = new_trade_items
 
@@ -705,10 +705,15 @@ class Seller(ClientLog, KeyActions, OCRChecker):
         KeyActions.__init__(self)
 
     """
+        TradeBot save buy result
+
         0: Get bought items
             if bought item > 100:
                 1: set_stash_price
     """
+
+    def update_trade_summary(self, path,item_id):
+        pass
 
 
 class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
