@@ -714,15 +714,25 @@ class Seller(ClientLog, KeyActions, OCRChecker):
                 1: set_stash_price
     """
 
-    def update_trade_summary(self, trade_item_id):
+    def update_trade_summary(self, trade_item_id: str):
+        """Create trade_summary if not exist; create summary template/update item_amount"""
         if not os.path.exists(self.trade_summary_path):
             with open(self.trade_summary_path, 'w', encoding='utf-8') as f:
-                f.write('[]')
+                f.write('{}')
+        summary_template = {
+            'item_id': trade_item_id,
+            'item_amount': 1
+        }
         data = self.load_json_file(self.trade_summary_path)
-        if trade_item_id in data:
-            pass
-        else:
-            pass
+        for trade_item in data:
+            if trade_item['item_id'] == trade_item_id:
+                trade_item['item_amount'] += 1
+                self.update_json_file(data, self.trade_summary_path)
+                return
+        if not data:
+            data = []
+        data.append(summary_template)
+        self.update_json_file(data, self.trade_summary_path)
 
 
 class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
