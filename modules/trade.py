@@ -724,13 +724,14 @@ class Seller(ClientLog, KeyActions, OCRChecker):
             'item_amount': 1
         }
         data = self.load_json_file(self.trade_summary_path)
+        """Update trade_item_amount"""
         for trade_item in data:
             if trade_item['item_id'] == trade_item_id:
                 trade_item['item_amount'] += 1
                 self.update_json_file(data, self.trade_summary_path)
                 return
-        if not data:
-            data = []
+        """Add trade_item to summary_template"""
+        data = []
         data.append(summary_template)
         self.update_json_file(data, self.trade_summary_path)
 
