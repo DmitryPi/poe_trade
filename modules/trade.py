@@ -704,36 +704,13 @@ class Seller(ClientLog, KeyActions, OCRChecker):
         ClientLog.__init__(self)
         OCRChecker.__init__(self)
         KeyActions.__init__(self)
-        self.trade_summary_path = 'temp/trade_summary.json'
+        """
+            TradeBot save buy result
 
-    """
-        TradeBot save buy result
-
-        0: Get bought items
-            if bought item > 100:
-                1: set_stash_price
-    """
-
-    def update_trade_summary(self, trade_item_id: str):
-        """Create trade_summary if not exist; create summary template/update item_amount"""
-        if not os.path.exists(self.trade_summary_path):
-            with open(self.trade_summary_path, 'w', encoding='utf-8') as f:
-                f.write('{}')
-        summary_template = {
-            'item_id': trade_item_id,
-            'item_amount': 1
-        }
-        data = self.load_json_file(self.trade_summary_path)
-        """Update trade_item_amount"""
-        for trade_item in data:
-            if trade_item['item_id'] == trade_item_id:
-                trade_item['item_amount'] += 1
-                self.update_json_file(data, self.trade_summary_path)
-                return
-        """Add trade_item to summary_template"""
-        data = []
-        data.append(summary_template)
-        self.update_json_file(data, self.trade_summary_path)
+            0: Get bought items
+                if bought item > 100:
+                    1: set_stash_price
+        """
 
 
 class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
@@ -751,6 +728,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
             'PRETRADE': 'PRETRADE',
             'TRADE': 'TRADE',
         }
+        self.trade_summary_path = 'temp/trade_summary.json'
         self.trade_timer_limit = 180
         self.stash_items_position = {
             'rusted-bestiary-scarab': [85, 210],
@@ -777,6 +755,28 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
     def set_state(self, status):
         self.STATE = status
         print(f'\n- State changed: {status}')
+
+    def update_trade_summary(self, trade_item_id: str):
+        """Create trade_summary if not exist; create summary template/update item_amount"""
+        if not os.path.exists(self.trade_summary_path):
+            with open(self.trade_summary_path, 'w', encoding='utf-8') as f:
+                f.write('{}')
+        summary_template = {
+            'item_id': trade_item_id,
+            'item_amount': 1
+        }
+        data = self.load_json_file(self.trade_summary_path)
+        if not data:
+            data = []
+        """Update trade_item_amount"""
+        for trade_item in data:
+            if trade_item['item_id'] == trade_item_id:
+                trade_item['item_amount'] += 1
+                self.update_json_file(data, self.trade_summary_path)
+                return
+        """Add trade_item to summary_template"""
+        data.append(summary_template)
+        self.update_json_file(data, self.trade_summary_path)
 
     def check_item(self, item_name, amount=0, trade=False, inventory=False):
         if inventory:
@@ -1465,8 +1465,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                                     self.sql_update_trade_user_priority,
                                     user_data
                                 )
-                            # self.action_send_ty(
-                            #     char_name=current_trade_user[2])
+                            # self.action_send_ty(char_name=current_trade_user[2])
                             time.sleep(0.3)
                             self.action_command_chat(self.cmd_kick)
                             self.set_state(None)

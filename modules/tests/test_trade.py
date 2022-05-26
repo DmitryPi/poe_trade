@@ -3,7 +3,7 @@ import json
 
 from unittest import TestCase
 
-from ..trade import ClientLog, Seller
+from ..trade import ClientLog, Seller, TradeBot
 
 
 class TestClientLog(TestCase, ClientLog):
@@ -15,6 +15,11 @@ class TestClientLog(TestCase, ClientLog):
 
 
 class TestSeller(TestCase, Seller):
+    def setUp(self):
+        pass
+
+
+class TestTradeBot(TestCase, TradeBot):
     def setUp(self):
         Seller.__init__(self)
         self.trade_summary_path = 'temp/test_trade_summary.json'
