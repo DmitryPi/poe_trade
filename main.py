@@ -32,9 +32,6 @@ class KeyPresser(AutoFlask, TradeBot):
                 clicker_thread.start()
             elif key == '<50>':  # code for [ctrl + 2]
                 pass
-                # self.trade_bot_switch = 0 if self.trade_bot_switch else 1
-                # msg = 'Activated' if self.trade_bot_switch else 'Stopped'
-                # print(f'- TradeBot {msg}')
             elif key == '<51>':  # code for [ctrl + 3]
                 self.trader_switch = 0 if self.trader_switch else 1
                 msg = 'Activated' if self.trader_switch else 'Stopped'

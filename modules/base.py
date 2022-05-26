@@ -29,6 +29,7 @@ class Base:
         self.trade_league = self.app_config['BASE']['trade_league']
         self.autogui_delay = float(self.app_config['BASE']['autogui_delay'][1:-1])
         self.template_dir = 'templates/'
+        self.trade_summary_path = 'temp/trade_summary.json'
         self.date_fmt = '%Y-%m-%d %H:%M:%S'
         self.main_loop_delay = 0.05
         pyautogui.PAUSE = self.autogui_delay
@@ -74,9 +75,12 @@ class Base:
         return config
 
     def load_json_file(self, filepath):
-        with open(f'{filepath}', 'r', encoding='utf-8') as json_file:
-            raw_json = json.load(json_file)
-            return raw_json
+        try:
+            with open(f'{filepath}', 'r', encoding='utf-8') as json_file:
+                data = json.load(json_file)
+                return data
+        except FileNotFoundError:
+            print('- File not found:', filepath)
 
     def update_json_file(self, data, filepath):
         with open(f'{filepath}', 'w', encoding='utf-8') as json_file:

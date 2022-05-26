@@ -656,6 +656,23 @@ class Trader(TradeDB, Base):
                 trade_item = trade_items[trade_item_counter]
                 print(f'\n- Switched to {trade_item["item_id"]}')
 
+                """Check if trade_item buy_limit reached"""
+                trade_summary = self.load_json_file(self.trade_summary_path)
+                if trade_summary:
+                    buy_limit = False
+                    for summary in trade_summary:
+                        if trade_item['item_id'] == summary['item_id']:
+                            if summary['item_amount'] >= trade_item['buy_limit']:
+                                buy_limit = True
+                                break
+                    if buy_limit:
+                        print('- Buy limit reached:', trade_item['item_id'], trade_item['buy_limit'])
+                        trade_item_counter += 1
+                        buy_limit = False
+                        time.sleep(1)
+                        continue
+
+                """Check if trade_item disabled"""
                 if trade_item['disabled']:
                     if trade_item_counter >= trade_items_len - 1:
                         trade_item_counter = 0
@@ -705,8 +722,6 @@ class Seller(ClientLog, KeyActions, OCRChecker):
         OCRChecker.__init__(self)
         KeyActions.__init__(self)
         """
-            TradeBot save buy result
-
             0: Get bought items
                 if bought item > 100:
                     1: set_stash_price
@@ -720,7 +735,6 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
         Trader.__init__(self)
         KeyActions.__init__(self)
         OCRChecker.__init__(self)
-        self.trade_bot_switch = 1
         self.STATE = None
         self.STATES = {
             'START': 'START',
@@ -728,7 +742,6 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
             'PRETRADE': 'PRETRADE',
             'TRADE': 'TRADE',
         }
-        self.trade_summary_path = 'temp/trade_summary.json'
         self.trade_timer_limit = 180
         self.stash_items_position = {
             'rusted-bestiary-scarab': [85, 210],
@@ -775,7 +788,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                 self.update_json_file(data, self.trade_summary_path)
                 print('- Trade summary updated')
                 return
-        """Add trade_item to summary_template"""
+        """Add new summary_template"""
         summary_template['item_amount'] += int(amount)
         data.append(summary_template)
         self.update_json_file(data, self.trade_summary_path)
