@@ -732,6 +732,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
         Trader.__init__(self)
         KeyActions.__init__(self)
         OCRChecker.__init__(self)
+        self.trade_bot_switch = 1
         self.STATE = None
         self.STATES = {
             'START': 'START',
@@ -1388,9 +1389,6 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                     self.action_command_chat(self.cmd_kick)
                     self.set_state('START')
             elif self.STATE == 'TRADE':
-                # current_trade_user = (52, 'allmoneyismine', 'Ultimatum_ent', 'card', 'the-dapper-prodigy', '', 5, 2, 'chaos', '2020-08-20 12:09:30.837062', 12, 3)
-                # self.trader_switch = 0
-
                 if not trade_started_at:
                     trade_started_at = datetime.now()
                 if not timer % 10:

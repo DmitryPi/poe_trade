@@ -13,57 +13,39 @@ from modules.keys import KeyActions
 from modules.trade import Prices, ClientLog, TradeBot
 
 
-COMBOS = [
-    {keyboard.Key.ctrl_l, keyboard.KeyCode(char='1')},
-    {keyboard.Key.ctrl_l, keyboard.KeyCode(char='2')},
-    {keyboard.Key.ctrl_l, keyboard.KeyCode(char='3')},
-    {keyboard.Key.ctrl_l, keyboard.KeyCode(char='4')},
-    {keyboard.Key.ctrl_l, keyboard.KeyCode(char='5')}
-]
-current_combo = set()
-
-
 class KeyPresser(AutoFlask, TradeBot):
     def __init__(self):
         AutoFlask.__init__(self)
         KeyActions.__init__(self)
         TradeBot.__init__(self)
-        self.keyboard = keyboard.Controller()
-        self.mouse = mouse.Controller()
-        self.current_keypress = set()
+        self.current_keypress = []
 
     def on_press(self, key):
-        self.current_keypress.add(key)
-
-        if any([key in COMBO for COMBO in COMBOS]):
-            current_combo.add(key)
-            if any(all(k in current_combo for k in COMBO) for COMBO in COMBOS):
-                if key == keyboard.KeyCode(char='1'):
-                    if gw.getActiveWindow().title != self.app_title:
-                        return False
-                    clicker_thread = Thread(
-                        target=self.action_autoclick_onspot)
-                    clicker_thread.daemon = True
-                    clicker_thread.start()
-
-                elif key == keyboard.KeyCode(char='2'):
-                    pass
-                elif key == keyboard.KeyCode(char='3'):
-                    self.trader_switch = 0 if self.trader_switch else 1
-                    msg = 'Activated' if self.trader_switch \
-                        else 'Stopped'
-                    print(f'- Trader {msg}')
-                elif key == keyboard.KeyCode(char='4'):
-                    pass
-                elif key == keyboard.KeyCode(char='5'):
-                    pass
+        if key not in self.current_keypress:
+            self.current_keypress.append(key)
+        if keyboard.Key.ctrl_l in self.current_keypress:
+            key = str(key)
+            if key == '<49>':  # code for [ctrl + 1]
+                if gw.getActiveWindow().title != self.app_title:
+                    return None
+                clicker_thread = Thread(target=self.action_autoclick_onspot, daemon=True)
+                clicker_thread.start()
+            elif key == '<50>':  # code for [ctrl + 2]
+                pass
+                # self.trade_bot_switch = 0 if self.trade_bot_switch else 1
+                # msg = 'Activated' if self.trade_bot_switch else 'Stopped'
+                # print(f'- TradeBot {msg}')
+            elif key == '<51>':  # code for [ctrl + 3]
+                self.trader_switch = 0 if self.trader_switch else 1
+                msg = 'Activated' if self.trader_switch else 'Stopped'
+                print(f'- Trader {msg}')
 
     def on_release(self, key):
         if key:
             try:
                 self.current_keypress.remove(key)
-            except KeyError:
-                self.current_keypress = set()
+            except (KeyError, ValueError):
+                self.current_keypress = []
 
         if key == keyboard.Key.end:
             return False
@@ -87,12 +69,6 @@ class KeyPresser(AutoFlask, TradeBot):
             self.action_command_chat(self.cmd_logout)
         elif key == keyboard.KeyCode(char='`') and 'ahp' in sys.argv:
             self.action_flask_macro(flask_binds=['num4', 'num5', 'num6', 'num7', 'num8'])
-        elif any([key in COMBO for COMBO in COMBOS]):
-            global current_combo
-            try:
-                current_combo.remove(key)
-            except KeyError:
-                current_combo = set()
 
     def on_move(self, x, y):
         # print('Pointer moved to {0}'.format((x, y)))
