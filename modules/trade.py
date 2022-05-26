@@ -756,14 +756,14 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
         self.STATE = status
         print(f'\n- State changed: {status}')
 
-    def update_trade_summary(self, trade_item_id: str):
+    def update_trade_summary(self, trade_item_id: str, amount: int) -> None:
         """Create trade_summary if not exist; create summary template/update item_amount"""
         if not os.path.exists(self.trade_summary_path):
             with open(self.trade_summary_path, 'w', encoding='utf-8') as f:
                 f.write('{}')
         summary_template = {
             'item_id': trade_item_id,
-            'item_amount': 1
+            'item_amount': 0
         }
         data = self.load_json_file(self.trade_summary_path)
         if not data:
@@ -771,10 +771,12 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
         """Update trade_item_amount"""
         for trade_item in data:
             if trade_item['item_id'] == trade_item_id:
-                trade_item['item_amount'] += 1
+                trade_item['item_amount'] += int(amount)
                 self.update_json_file(data, self.trade_summary_path)
+                print('- Trade summary updated')
                 return
         """Add trade_item to summary_template"""
+        summary_template['item_amount'] += int(amount)
         data.append(summary_template)
         self.update_json_file(data, self.trade_summary_path)
 
@@ -1471,7 +1473,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                                     self.sql_update_trade_user_priority,
                                     user_data
                                 )
-                            self.update_trade_summary(current_trade_user[4])
+                            self.update_trade_summary(current_trade_user[4], current_trade_user[7])
                             # self.action_send_ty(char_name=current_trade_user[2])
                             time.sleep(0.3)
                             self.action_command_chat(self.cmd_kick)
