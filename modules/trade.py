@@ -1355,6 +1355,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                                 self.trader_switch = 0
                                 self.set_state('END')
                                 print('- Ended at:', datetime.now().time())
+                                self.action_command_chat(self.cmd_logout)
                                 break
                             pyautogui.press('esc')
                             self.mouse_move(1000, 300)
