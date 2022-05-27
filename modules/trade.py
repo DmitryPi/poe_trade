@@ -661,6 +661,9 @@ class Trader(TradeDB, Base):
                 if trade_summary:
                     buy_limit = False
                     for summary in trade_summary:
+                        if not summary.get('item_price'):  # update trade_summary info
+                            summary.update({'item_price': trade_item['max_stock_price']})
+                            self.update_json_file(summary, self.trade_summary_path)
                         if trade_item['item_id'] == summary['item_id']:
                             if summary['item_amount'] >= trade_item['buy_limit']:
                                 buy_limit = True
@@ -853,6 +856,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
         if 'scarab' in item_id:
             self.stash_activate_tab('fragment', 'scarab')
             time.sleep(0.3)
+            """Activate sell dropdown"""
             scarab_pos = self.stash_get_scarab_position(item_id)
             self.mouse_move(*scarab_pos)
             time.sleep(0.2)
