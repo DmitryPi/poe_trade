@@ -43,7 +43,7 @@ def wind_mouse(
         move_y = int(np.round(start_y))
         if current_x != move_x or current_y != move_y:
             # This should wait for the mouse polling interval
-            pyautogui.PAUSE = 0
+            pyautogui.PAUSE = 0.01
             move_mouse(current_x := move_x, current_y := move_y)
     pyautogui.PAUSE = 0.015
     return current_x, current_y
