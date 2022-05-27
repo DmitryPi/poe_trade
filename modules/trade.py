@@ -1080,7 +1080,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
             pyautogui.doubleClick()
             time.sleep(0.2)
             # prevent currency cliping
-            self.mouse_move(empty_slots[0][0], empty_slots[0][1], delay=True)
+            self.mouse_move(empty_slots[0][0], empty_slots[0][1])
             time.sleep(0.1)
             pyautogui.click()
             time.sleep(0.2)
