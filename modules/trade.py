@@ -996,7 +996,8 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
             return result
         for pt in sorted(coords, reverse=True):
             if not trade_accepted:
-                self.mouse_move(pt[0], pt[1], delay=True)
+                self.mouse_move(pt[0], pt[1])
+                time.sleep(0.05)
             if validate and trade_user:
                 for i in range(0, 4):
                     item_valid = self.trade_validate_item(
