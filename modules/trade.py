@@ -665,7 +665,7 @@ class Trader(TradeDB, Base):
                         if trade_item['item_id'] == summary['item_id']:
                             """update trade_summary item_price"""
                             if not summary.get('item_price'):
-                                summary.update({'item_price': trade_item['max_stock_price']})
+                                summary.update({'item_buy_price': trade_item['max_stock_price']})
                                 self.update_json_file(trade_summary, self.trade_summary_path)
                                 print('- Trade summary updated')
                             """Set trade_item buy_limit"""
@@ -782,7 +782,8 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
         summary_template = {
             'item_id': trade_item_id,
             'item_amount': 0,
-            'item_price': 0
+            'item_buy_price': 0,
+            'item_sell_price': 0
         }
         data = self.load_json_file(self.trade_summary_path)
         if not data:
