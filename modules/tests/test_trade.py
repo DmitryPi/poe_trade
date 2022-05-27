@@ -1,5 +1,6 @@
 import os
-import json
+import time
+import pytest
 
 from unittest import TestCase
 
@@ -23,6 +24,16 @@ class TestTradeBot(TestCase, TradeBot):
     def setUp(self):
         Seller.__init__(self)
         self.trade_summary_path = 'temp/test_trade_summary.json'
+
+    @pytest.mark.slow
+    def test_stash_activate_tab(self):
+        self.stash_activate_tab('currency', subtab='exotic')
+        time.sleep(1)
+        self.stash_activate_tab('fragment', subtab='breach')
+        time.sleep(1)
+        self.stash_activate_tab('fragment', subtab='scarab')
+        time.sleep(1)
+        self.stash_activate_tab('hdf')
 
     def test_update_trade_summary(self):
         self.update_trade_summary('test', 2)  # 0 += 2

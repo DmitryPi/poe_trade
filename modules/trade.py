@@ -793,6 +793,69 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
         data.append(summary_template)
         self.update_json_file(data, self.trade_summary_path)
 
+    def stash_activate_tab(self, tab: str, subtab='') -> None:
+        tabs = {
+            "currency": {
+                "main": (75, 110),
+                "sub": {
+                    "general": (250, 145),
+                    "exotic": (425, 145),
+                },
+            },
+            "fragment": {
+                "main": (160, 110),
+                "sub": {
+                    "general": (95, 145),
+                    "breach": (250, 145),
+                    "scarab": (410, 145),
+                },
+            },
+        }
+        if not self.check_stash_opened():
+            self.check_open_stash()
+        try:
+            tab_main = tabs[tab]['main']
+            tab_sub = tabs[tab]['sub'].get(subtab, None)
+            self.mouse_move(*tab_main)
+            time.sleep(0.1)
+            pyautogui.click()
+            if tab_sub:
+                self.mouse_move(*tab_sub)
+                time.sleep(0.1)
+                pyautogui.click()
+        except KeyError:
+            print('- Error! Incorrect tab/subtab name:', tab, subtab)
+
+    def stash_take_item(self, item_id, amount=0):
+        item_pos = self.stash_items_position[item_id]
+        if 'scarab' in item_id:
+            self.mouse_move_click(item_pos[0], item_pos[1], ctrl=True, interval=0.01)
+        elif 'fossil' in item_id:
+            self.mouse_move_click(item_pos[0], item_pos[1], ctrl=True)
+        else:
+            pass
+
+    def stash_set_price(self, item_id, price, proportion_size=0, skip=True):
+        if proportion_size:
+            price = int(price * proportion_size)
+            price = f'{price}/{proportion_size}'
+        price_tmplt = '~skip' if skip else f'~price {price} chaos'
+        item_pos = self.stash_items_position[item_id]
+        self.mouse_move(item_pos[0], item_pos[1], delay=True)
+        self.mouse_move_click(btn='right')
+        time.sleep(0.2)
+        self.mouse_move_click(item_pos[0] - 55, item_pos[1] + 90, delay=True)  # dropdown
+        time.sleep(0.3)
+        self.mouse_move(item_pos[0] - 55, item_pos[1] + 125)  # note
+        self.mouse_move_click()
+        time.sleep(0.2)
+        self.mouse_move_click(item_pos[0] + 200, item_pos[1] + 90, delay=True, clicks=2)  # note field
+        time.sleep(0.2)
+        self.keyboard_select_text()
+        self.pyperclip_copy(price_tmplt)
+        self.keyboard_paste()
+        self.keyboard_enter()
+
     def check_item(self, item_name, amount=0, trade=False, inventory=False):
         if inventory:
             crop = self.crop['inventory']
@@ -1260,36 +1323,6 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                 print('- User items:', len(trade_user_items), trade_user[7])
                 if len(trade_user_items) >= trade_user[7]:
                     self.check_trade_opened(accept=True)
-
-    def stash_take_item(self, item_id, amount=0):
-        item_pos = self.stash_items_position[item_id]
-        if 'scarab' in item_id:
-            self.mouse_move_click(item_pos[0], item_pos[1], ctrl=True, interval=0.01)
-        elif 'fossil' in item_id:
-            self.mouse_move_click(item_pos[0], item_pos[1], ctrl=True)
-        else:
-            pass
-
-    def stash_set_price(self, item_id, price, proportion_size=0, skip=True):
-        if proportion_size:
-            price = int(price * proportion_size)
-            price = f'{price}/{proportion_size}'
-        price_tmplt = '~skip' if skip else f'~price {price} chaos'
-        item_pos = self.stash_items_position[item_id]
-        self.mouse_move(item_pos[0], item_pos[1], delay=True)
-        self.mouse_move_click(btn='right')
-        time.sleep(0.2)
-        self.mouse_move_click(item_pos[0] - 55, item_pos[1] + 90, delay=True)  # dropdown
-        time.sleep(0.3)
-        self.mouse_move(item_pos[0] - 55, item_pos[1] + 125)  # note
-        self.mouse_move_click()
-        time.sleep(0.2)
-        self.mouse_move_click(item_pos[0] + 200, item_pos[1] + 90, delay=True, clicks=2)  # note field
-        time.sleep(0.2)
-        self.keyboard_select_text()
-        self.pyperclip_copy(price_tmplt)
-        self.keyboard_paste()
-        self.keyboard_enter()
 
     def run_buyer(self):
         db_conn = self.db_create_connection()
