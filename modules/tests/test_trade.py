@@ -11,9 +11,6 @@ class TestClientLog(TestCase, ClientLog):
     def setUp(self):
         ClientLog.__init__(self)
 
-    def test_test(self):
-        self.assertTrue(1 == 1)
-
 
 class TestSeller(TestCase, Seller):
     def setUp(self):
@@ -47,6 +44,17 @@ class TestTradeBot(TestCase, TradeBot):
             print('- Scarab:', scarab)
             self.stash_take_item(scarab[0], amount=scarab[1])
             time.sleep(1)
+
+    @pytest.mark.slow
+    def test_stash_set_price(self):
+        scarabs = [
+            ('rusted-expedition-scarab', 50),
+            ('polished-expedition-scarab', 20),
+            ('gilded-divination-scarab', '5/50'),
+            ('gilded-breach-scarab', 100),
+        ]
+        for scarab in scarabs:
+            self.stash_set_item_price(scarab[0], scarab[1])
 
     @pytest.mark.slow
     def test_unstuck_currency(self):

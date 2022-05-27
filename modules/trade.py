@@ -631,7 +631,7 @@ class Trader(TradeDB, Base):
             print("- Sent whisper to %s : %s" % (current_trade_user[1], current_trade_user[2]))
             self.send_whisper(whisper)
             self.db_update_trade_user_priority(db_conn, current_trade_user, str(datetime.now()))
-            time.sleep(2)
+            time.sleep(3)
             self.whisper_queue.task_done()
 
     def run_trader(self, trade_items_file):
@@ -792,6 +792,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
         self.update_json_file(data, self.trade_summary_path)
 
     def stash_activate_tab(self, tab: str, subtab='') -> None:
+        """Activate one of the stash tabs if stash is opened"""
         tabs = {
             "currency": {
                 "main": (75, 110),
@@ -825,46 +826,58 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
         except KeyError:
             print('- Error! Incorrect tab/subtab name:', tab, subtab)
 
-    def stash_take_item(self, item_id, amount=0):
-        if 'scarab' in item_id:
-            """Scarab tab has 2 columns; there 16 types; each scarab has 4 tiers
-               Column element split equals to 70px
-               Calculate xy row position for 4 tiers
-               Choose which item_id prefix == scarab_tier
-            """
-            scarab_tiers = ['rusted', 'polished', 'gilded', 'winged']
-            scarab_id = item_id.split('-')
-            scarab_pos = self.stash_items_position[scarab_id[1]]
-            x_row = [i * 70 for i in range(4)]  # generate scarab tier x positions
-            rows = [(i + scarab_pos[0], scarab_pos[1]) for i in x_row]
-            amount = math.ceil(amount / 10)  # calc amount of clicks ;+1 for safety
-            for i, tier in enumerate(scarab_tiers):
-                if tier == scarab_id[0]:  # scarab_id prefix
-                    self.mouse_move(*rows[i])
-                    time.sleep(0.3)
-                    self.mouse_move_click(clicks=amount, interval=0.25, ctrl=True)
-                    break
+    def stash_get_scarab_position(self, item_id: str) -> list:
+        """Scarab tab has 2 columns; there 16 types; each scarab has 4 tiers
+           Column element split equals to 70px
+           Calculate xy row position for 4 tiers
+           Choose which item_id[prefix == scarab_tier
+        """
+        scarab_tiers = ['rusted', 'polished', 'gilded', 'winged']
+        scarab_id = item_id.split('-')
+        scarab_pos = self.stash_items_position[scarab_id[1]]
+        x_row = [i * 70 for i in range(4)]  # generate scarab tier x positions
+        rows = [(i + scarab_pos[0], scarab_pos[1]) for i in x_row]
+        for i, tier in enumerate(scarab_tiers):
+            if tier == scarab_id[0]:  # scarab_id prefix
+                return rows[i]
 
-    def stash_set_price(self, item_id, price, proportion_size=0, skip=True):
-        if proportion_size:
-            price = int(price * proportion_size)
-            price = f'{price}/{proportion_size}'
-        price_tmplt = '~skip' if skip else f'~price {price} chaos'
-        item_pos = self.stash_items_position[item_id]
-        self.mouse_move(item_pos[0], item_pos[1], delay=True)
-        self.mouse_move_click(btn='right')
-        time.sleep(0.2)
-        self.mouse_move_click(item_pos[0] - 55, item_pos[1] + 90, delay=True)  # dropdown
-        time.sleep(0.3)
-        self.mouse_move(item_pos[0] - 55, item_pos[1] + 125)  # note
-        self.mouse_move_click()
-        time.sleep(0.2)
-        self.mouse_move_click(item_pos[0] + 200, item_pos[1] + 90, delay=True, clicks=2)  # note field
-        time.sleep(0.2)
-        self.keyboard_select_text()
-        self.pyperclip_copy(price_tmplt)
-        self.keyboard_paste()
-        self.keyboard_enter()
+    def stash_take_item(self, item_id: str, amount=0) -> None:
+        if 'scarab' in item_id:
+            amount = math.ceil(amount / 10)  # calc amount of clicks ;+1 for safety
+            scarab_pos = self.stash_get_scarab_position(item_id)
+            self.mouse_move(*scarab_pos)
+            time.sleep(0.3)
+            self.mouse_move_click(clicks=amount, interval=0.25, ctrl=True)
+
+    def stash_set_item_price(self, item_id: str, price: str) -> None:
+        if 'scarab' in item_id:
+            self.stash_activate_tab('fragment', 'scarab')
+            time.sleep(0.3)
+            scarab_pos = self.stash_get_scarab_position(item_id)
+            self.mouse_move(*scarab_pos)
+            time.sleep(0.2)
+            self.mouse_move_click(btn='right')
+            """Hover over price dropdown"""
+            x_pos, y_pos = pyautogui.position()
+            self.mouse_move(x_pos - 150, y_pos + 90, delay=True)
+            self.mouse_move_click()
+            """Select dropdown type - Exact Price"""
+            x_pos, y_pos = pyautogui.position()
+            self.mouse_move(x_pos, y_pos + 80, delay=True)
+            self.mouse_move_click()
+            """Hover over price box - click"""
+            x_pos, y_pos = pyautogui.position()
+            self.mouse_move(x_pos + 125, y_pos - 80, delay=True)
+            self.mouse_move_click()
+            """Insert price"""
+            self.keyboard_select_text()
+            time.sleep(0.2)
+            self.pyperclip_copy(price)
+            self.keyboard_paste()
+            """Click accept button"""
+            x_pos, y_pos = pyautogui.position()
+            self.mouse_move(x_pos + 245, y_pos + 45, delay=True)
+            self.mouse_move_click()
 
     def check_item(self, item_name, amount=0, trade=False, inventory=False):
         if inventory:
