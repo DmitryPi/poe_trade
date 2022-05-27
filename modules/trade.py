@@ -1168,7 +1168,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
             x_btn = int(coords[0] + 300)
             y_btn = int(coords[1] + 130)
         self.mouse_move(x_btn, y_btn)
-        time.sleep(0.1)
+        time.sleep(0.2)
         self.mouse_move_click(clicks=2, delay=False)
 
     def ocr_user_deduct(self, db_conn, ocr_text):
@@ -1365,6 +1365,8 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                 if self.check_hideout() or len(self.check_invite()) > 2:
                     invites = self.check_invite(check_type=True)
                     if invites:
+                        if 'party' in invites:
+                            self.trader_switch = 0
                         in_party = False
                         self.set_state('HIDEOUT')
                         continue
@@ -1412,6 +1414,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                         self.set_state('PRETRADE')
                         continue
                     else:
+                        time.sleep(1)  # not sure if this works to fix 1 bug
                         in_party = False
                         self.set_state('START')
                         continue
@@ -1422,7 +1425,6 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                         self.trader_switch = 1
                     if 'party' in invites:
                         self.trader_switch = 0
-                        # time.sleep(0.5)
                         invites = self.check_invite(check_type=True)
                     for invite in invites:
                         if 'party' in invite:
