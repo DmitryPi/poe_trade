@@ -931,7 +931,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                 'polished-breach-scarab': 0.8,
                 'gilded-breach-scarab': 0.84,
                 'rusted-harbinger-scarab': 0.70,
-                'polished-harbinger-scarab': 0.85,
+                'polished-harbinger-scarab': 0.8,
                 'gilded-harbinger-scarab': 0.81,
                 'polished-cartography-scarab': 0.75
             }
@@ -1144,19 +1144,16 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
             pyautogui.click()
             pyautogui.press(str(amount))
             pyautogui.keyUp('shift')
-            self.mouse_move(coords[0] + 95, coords[1] - 40, delay=True)
-            time.sleep(0.2)
+            self.mouse_move(coords[0] + 95, coords[1] - 40)
             pyautogui.click()
             self.mouse_move(empty_slots[0][0], empty_slots[0][1], delay=True)
             del empty_slots[0]
-            time.sleep(0.2)
             pyautogui.doubleClick()
             time.sleep(0.2)
             # prevent currency cliping
-            self.mouse_move(empty_slots[0][0], empty_slots[0][1])
+            self.mouse_move(empty_slots[0][0], empty_slots[0][1], delay=True)
             time.sleep(0.1)
             pyautogui.click()
-            time.sleep(0.2)
             self.mouse_move(1350, 500)
         else:
             raise IndexError

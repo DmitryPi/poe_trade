@@ -48,6 +48,9 @@ class TestTradeBot(TestCase, TradeBot):
             self.stash_take_item(scarab[0], amount=scarab[1])
             time.sleep(1)
 
+    def test_unstuck_currency(self):
+        self.unstuck_currency((1297, 615), 5)
+
     def test_update_trade_summary(self):
         self.update_trade_summary('test', 2)  # 0 += 2
         data = self.load_json_file(self.trade_summary_path)
