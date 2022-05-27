@@ -1144,7 +1144,9 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
             pyautogui.click()
             pyautogui.press(str(amount))
             pyautogui.keyUp('shift')
+            time.sleep(0.2)
             self.mouse_move(coords[0] + 95, coords[1] - 40)
+            time.sleep(0.2)
             pyautogui.click()
             self.mouse_move(empty_slots[0][0], empty_slots[0][1], delay=True)
             del empty_slots[0]

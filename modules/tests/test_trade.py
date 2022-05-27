@@ -48,6 +48,7 @@ class TestTradeBot(TestCase, TradeBot):
             self.stash_take_item(scarab[0], amount=scarab[1])
             time.sleep(1)
 
+    @pytest.mark.slow
     def test_unstuck_currency(self):
         self.unstuck_currency((1297, 615), 5)
 
