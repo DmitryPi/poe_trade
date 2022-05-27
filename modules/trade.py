@@ -744,25 +744,23 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
         }
         self.trade_timer_limit = 180
         self.stash_items_position = {
-            'rusted-bestiary-scarab': [85, 210],
-            'polished-bestiary-scarab': [155, 210],
-            'gilded-bestiary-scarab': [220, 210],
-            'rusted-sulphite-scarab': [85, 410],
-            'polished-sulphite-scarab': [150, 410],
-            'gilded-sulphite-scarab': [220, 410],
-            'rusted-metamorph-scarab': [85, 475],
-            'polished-metamorph-scarab': [150, 475],
-            'gilded-metamorph-scarab': [220, 475],
-            'rusted-legion-scarab': [85, 540],
-            'polished-legion-scarab': [150, 540],
-            'polished-breach-scarab': [440, 605],
-            'gilded-breach-scarab': [505, 605],
-            'rusted-harbinger-scarab': [370, 410],
-            'polished-harbinger-scarab': [440, 410],
-            'polished-cartography-scarab': [440, 340],
-            'corroded-fossil': [135, 265],
-            'perfect-fossil': [195, 265],
-            'shuddering-fossil': [595, 265],
+            'bestiary': [85, 210],
+            'reliquary': [85, 275],
+            'torment': [85, 340],
+            'sulphite': [85, 405],
+            'metamorph': [85, 470],
+            'legion': [85, 535],
+            'ambush': [85, 600],
+            'blight': [85, 665],
+            # Second column
+            'shaper': [370, 210],
+            'expedition': [370, 275],
+            'cartography': [370, 340],
+            'harbinger': [370, 405],
+            'elder': [370, 470],
+            'divination': [370, 535],
+            'breach': [370, 600],
+            'abyss': [370, 665],
         }
 
     def set_state(self, status):
@@ -813,6 +811,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
         }
         if not self.check_stash_opened():
             self.check_open_stash()
+            time.sleep(1)
         try:
             tab_main = tabs[tab]['main']
             tab_sub = tabs[tab]['sub'].get(subtab, None)
@@ -827,13 +826,24 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
             print('- Error! Incorrect tab/subtab name:', tab, subtab)
 
     def stash_take_item(self, item_id, amount=0):
-        item_pos = self.stash_items_position[item_id]
         if 'scarab' in item_id:
-            self.mouse_move_click(item_pos[0], item_pos[1], ctrl=True, interval=0.01)
-        elif 'fossil' in item_id:
-            self.mouse_move_click(item_pos[0], item_pos[1], ctrl=True)
-        else:
-            pass
+            """Scarab tab has 2 columns; there 16 types; each scarab has 4 tiers
+               Column element split equals to 70px
+               Calculate xy row position for 4 tiers
+               Choose which item_id prefix == scarab_tier
+            """
+            scarab_tiers = ['rusted', 'polished', 'gilded', 'winged']
+            scarab_id = item_id.split('-')
+            scarab_pos = self.stash_items_position[scarab_id[1]]
+            x_row = [i * 70 for i in range(4)]  # generate scarab tier x positions
+            rows = [(i + scarab_pos[0], scarab_pos[1]) for i in x_row]
+            amount = math.ceil(amount / 10)  # calc amount of clicks ;+1 for safety
+            for i, tier in enumerate(scarab_tiers):
+                if tier == scarab_id[0]:  # scarab_id prefix
+                    self.mouse_move(*rows[i])
+                    time.sleep(0.3)
+                    self.mouse_move_click(clicks=amount, interval=0.25, ctrl=True)
+                    break
 
     def stash_set_price(self, item_id, price, proportion_size=0, skip=True):
         if proportion_size:

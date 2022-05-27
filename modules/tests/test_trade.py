@@ -22,7 +22,7 @@ class TestSeller(TestCase, Seller):
 
 class TestTradeBot(TestCase, TradeBot):
     def setUp(self):
-        Seller.__init__(self)
+        TradeBot.__init__(self)
         self.trade_summary_path = 'temp/test_trade_summary.json'
 
     @pytest.mark.slow
@@ -34,6 +34,19 @@ class TestTradeBot(TestCase, TradeBot):
         self.stash_activate_tab('fragment', subtab='scarab')
         time.sleep(1)
         self.stash_activate_tab('hdf')
+
+    @pytest.mark.slow
+    def test_stash_take_item(self):
+        scarabs = [
+            ('rusted-expedition-scarab', 50),
+            ('polished-expedition-scarab', 20),
+            ('gilded-divination-scarab', 30),
+            ('gilded-breach-scarab', 100),
+        ]
+        for scarab in scarabs:
+            print('- Scarab:', scarab)
+            self.stash_take_item(scarab[0], amount=scarab[1])
+            time.sleep(1)
 
     def test_update_trade_summary(self):
         self.update_trade_summary('test', 2)  # 0 += 2
