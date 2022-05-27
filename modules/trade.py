@@ -1065,7 +1065,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
     def unstuck_currency(self, coords, amount):
         empty_slots = self.check_empty_slot(inventory=True)
         if len(empty_slots) >= 2:
-            self.mouse_move(coords[0], coords[1], delay=True)
+            self.mouse_move(coords[0], coords[1])
             pyautogui.keyUp('shift')
             pyautogui.keyDown('shift')
             pyautogui.click()
