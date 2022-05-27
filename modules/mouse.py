@@ -4,7 +4,7 @@ import pyautogui
 
 def wind_mouse(
         start_x, start_y, dest_x, dest_y,
-        G_0=9, W_0=3, M_0=10, D_0=12, delay=0, move_mouse=lambda x, y: None):
+        G_0=9, W_0=3, M_0=10, D_0=12, delay=False, move_mouse=lambda x, y: None):
     '''
     WindMouse algorithm. Calls the move_mouse kwarg with each new step.
     Released under the terms of the GPLv3 license.
@@ -43,7 +43,8 @@ def wind_mouse(
         move_y = int(np.round(start_y))
         if current_x != move_x or current_y != move_y:
             # This should wait for the mouse polling interval
-            pyautogui.PAUSE = delay
-            move_mouse(current_x := move_x, current_y := move_y)
-    pyautogui.PAUSE = 0.015
+            if delay:  # pyautogui func moveTo
+                move_mouse(current_x := move_x, current_y := move_y)
+            else:  # win32api func SetCursorPos
+                move_mouse((current_x := move_x, current_y := move_y))
     return current_x, current_y

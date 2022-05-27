@@ -10,6 +10,7 @@ import pyautogui
 import pydirectinput
 import pygetwindow as gw
 import pytesseract
+import win32api
 import win32gui
 import win32con
 
@@ -209,11 +210,16 @@ class Base:
             threaded=True
         )
 
-    def mouse_move(self, x, y, humanlike=True, delay=False):
+    def mouse_move(self, x: int, y: int, humanlike=True, delay=False):
+        """Move mouse with pyautogui or win32api;
+           humanlike=True to move mouse randomly"""
         if humanlike:
             pos_x, pos_y = pyautogui.position()
             delay = 0.01 if delay else 0
-            wind_mouse(pos_x, pos_y, x, y, delay=delay, move_mouse=pyautogui.moveTo)
+            if delay:
+                wind_mouse(pos_x, pos_y, x, y, delay=delay, move_mouse=pyautogui.moveTo)
+            else:
+                wind_mouse(pos_x, pos_y, x, y, delay=delay, move_mouse=win32api.SetCursorPos)
         else:
             pyautogui.moveTo(x, y)
             if delay:
