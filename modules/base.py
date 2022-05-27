@@ -19,6 +19,8 @@ from PIL import ImageGrab
 from colorthief import ColorThief
 from win10toast import ToastNotifier
 
+from mouse import wind_mouse
+
 
 class Base:
     def __init__(self):
@@ -207,10 +209,14 @@ class Base:
             threaded=True
         )
 
-    def mouse_move(self, x, y, delay=True):
-        pyautogui.moveTo(x, y)
-        if delay:
-            time.sleep(0.05)
+    def mouse_move(self, x, y, humanlike=True, delay=True):
+        if humanlike:
+            pos_x, pos_y = pyautogui.position()
+            wind_mouse(pos_x, pos_y, x, y, move_mouse=pyautogui.moveTo)
+        else:
+            pyautogui.moveTo(x, y)
+            if delay:
+                time.sleep(0.05)
 
     def mouse_move_click(
             self, x=None, y=None,
