@@ -817,11 +817,11 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
             tab_main = tabs[tab]['main']
             tab_sub = tabs[tab]['sub'].get(subtab, None)
             self.mouse_move(*tab_main)
-            time.sleep(0.1)
+            time.sleep(0.2)
             pyautogui.click()
             if tab_sub:
                 self.mouse_move(*tab_sub)
-                time.sleep(0.1)
+                time.sleep(0.2)
                 pyautogui.click()
         except KeyError:
             print('- Error! Incorrect tab/subtab name:', tab, subtab)

@@ -605,4 +605,3 @@ class OCRChecker(Base):
             self.mouse_move(pt_0, pt_1)
             time.sleep(0.2)
             pyautogui.click()
-            time.sleep(1)
