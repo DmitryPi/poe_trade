@@ -19,7 +19,7 @@ from PIL import ImageGrab
 from colorthief import ColorThief
 from win10toast import ToastNotifier
 
-from mouse import wind_mouse
+from .mouse import wind_mouse
 
 
 class Base:
