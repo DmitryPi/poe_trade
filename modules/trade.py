@@ -664,8 +664,9 @@ class Trader(TradeDB, Base):
                         """check if trade_summary amount == buy_limit"""
                         if trade_item['item_id'] == summary['item_id']:
                             if not summary.get('item_price'):  # update trade_summary item_price
-                                summary.update({'item_price': trade_item['max_stock_price']})
+                                summary['item_price'] += trade_item['max_stock_price']
                                 self.update_json_file(summary, self.trade_summary_path)
+                                print('- Trade summary updated')
                             if summary['item_amount'] >= trade_item['buy_limit']:
                                 buy_limit = True
                                 break
