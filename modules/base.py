@@ -209,10 +209,11 @@ class Base:
             threaded=True
         )
 
-    def mouse_move(self, x, y, humanlike=True, delay=True):
+    def mouse_move(self, x, y, humanlike=True, delay=False):
         if humanlike:
             pos_x, pos_y = pyautogui.position()
-            wind_mouse(pos_x, pos_y, x, y, move_mouse=pyautogui.moveTo)
+            delay = 0.01 if delay else 0
+            wind_mouse(pos_x, pos_y, x, y, delay=delay, move_mouse=pyautogui.moveTo)
         else:
             pyautogui.moveTo(x, y)
             if delay:
