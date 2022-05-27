@@ -687,7 +687,7 @@ class Trader(TradeDB, Base):
                     response = self.build_cleaned_data(response, trade_item)
                     with db_conn:
                         self.smart_whispers(db_conn, response, trade_item)
-                    time.sleep(5)
+                    time.sleep(4)
                 except Exception as e:
                     sleep_duration = 60
                     api_err_msg = "Can't access Trade API\n"
