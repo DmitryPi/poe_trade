@@ -1168,7 +1168,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
             x_btn = int(coords[0] + 300)
             y_btn = int(coords[1] + 130)
         self.mouse_move(x_btn, y_btn)
-        time.sleep(0.2)
+        time.sleep(0.1)
         self.mouse_move_click(clicks=2, delay=False)
 
     def ocr_user_deduct(self, db_conn, ocr_text):
@@ -1365,7 +1365,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                 if self.check_hideout() or len(self.check_invite()) > 2:
                     invites = self.check_invite(check_type=True)
                     if invites:
-                        if 'party' in invites:
+                        if 'party' in invites:  # not sure if this will add preventive trader_switch
                             self.trader_switch = 0
                         in_party = False
                         self.set_state('HIDEOUT')
@@ -1431,6 +1431,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                             ocr_text = self.check_invite_account_name(invite)
                             current_trade_user = self.ocr_user_deduct(db_conn, ocr_text)
                             self.game_invite(invite, accept=True)
+                            time.sleep(0.3)  # fix double click on different invite
                             if self.check_stash_opened():
                                 pyautogui.press('esc')
                             for i in range(3):
