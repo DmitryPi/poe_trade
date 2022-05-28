@@ -88,14 +88,14 @@ class ClientLog(Base):
             self.log_error(e)
             return False
 
-    def log_filter_timeframe(self, line):
-        """TODO"""
+    def log_filter_datetime(self, line: str) -> list:
+        """Return list of 2 elements: 0 - date(yyyy/mm/dd); 1 - time(hh:mm:ss)"""
         match = re.search(
             r'\d+/\d+/\d+\s\d+:\d+:\d+', line, flags=re.IGNORECASE)
         if match:
             span = match.span()
             timeframe = line[span[0]:span[1]].split(' ')
-            return (timeframe[1], timeframe[0])
+            return timeframe
 
     def log_filter_name(self, line: str, msg_type='from') -> str:
         """Return filtered character name from log string"""
@@ -108,47 +108,45 @@ class ClientLog(Base):
                 char_name = char_name.split(' ')[1]
             return char_name.strip()
 
-    def log_trade_error(self, line):
+    def log_trade_error(self, line: str) -> tuple:
+        """TODO"""
         msg_type = 'error'
         msg = line.split(':')[3].strip().lower()
-        timeframe = self.log_filter_timeframe(line)
+        timeframe = self.log_filter_datetime(line)
         if not timeframe:
             return None
-        return (msg_type, msg, timeframe[1], timeframe[0])
+        return (msg_type, msg, timeframe)
 
-    def log_area_error(self, line):
+    def log_area_error(self, line: str) -> tuple:
+        """TODO"""
         msg_type = 'area_error'
         msg = line.split(':')[3].strip().lower()
-        timeframe = self.log_filter_timeframe(line)
+        timeframe = self.log_filter_datetime(line)
         if not timeframe:
             return None
-        return (msg_type, msg, timeframe[1], timeframe[0])
+        return (msg_type, msg, timeframe)
 
-    def log_trade(self, line, accepted=True):
+    def log_trade_state(self, line: str, accepted=True) -> tuple:
         """TODO"""
         msg_type = 'accepted' if accepted else 'cancelled'
-        timeframe = self.log_filter_timeframe(line)
+        timeframe = self.log_filter_datetime(line)
         if not timeframe:
             return None
-        return (msg_type, timeframe[1], timeframe[0])
+        return (msg_type, timeframe)
 
-    def log_filter_buy_msg(self, line: str) -> tuple:
+    def log_build_buy_msg(self, line: str) -> tuple:
         """TODO: position"""
-        line = line.lower()
-        msg_type = 'from'
-        char_name = line.split(':')[2].split('@from')[1].strip()
-        if '>' in char_name:
-            char_name = char_name.split('>')[1].strip()
+        char_name = self.log_filter_name(line, msg_type='from')
+        timeframe = self.log_filter_datetime(line)
+        if not char_name or not timeframe:
+            return None
         msg = line.split(':')[3].strip()
         msg_match = re.search(r'(?<=your).*?(?=for)', msg)
-        timeframe = self.log_filter_timeframe(line)
-        if not msg_match or not timeframe:
-            return None
         msg_match = msg_match[0].strip()
         msg_item_amount = re.findall('(\d+)', msg_match)
         msg_item_amount = int(msg_item_amount[0]) if msg_item_amount else 0
         msg_item = '-'.join(re.findall('([A-Za-z]+)', msg_match))
-        return (msg_type, char_name, msg_item_amount, msg_item, timeframe[1], timeframe[0])
+        return (char_name, msg_item_amount, msg_item, timeframe)
 
     def log_filter_joined_left_area(self, line: str) -> tuple:
         """TODO"""
@@ -156,10 +154,10 @@ class ClientLog(Base):
         char_name = line.split(':')[3].split('has')[0].strip()
         if '>' in char_name:
             char_name = char_name.split('>')[1].strip()
-        timeframe = self.log_filter_timeframe(line)
+        timeframe = self.log_filter_datetime(line)
         if not timeframe:
             return None
-        return (msg_type, char_name, timeframe[1], timeframe[0])
+        return (msg_type, char_name, timeframe)
 
     def log_manage(self, time_limit=60):
         result = []
@@ -173,13 +171,13 @@ class ClientLog(Base):
                     if '@to' in line:
                         self.log_to_filter(line)
                     elif '@from' in line:
-                        log_res = self.log_filter_buy_msg(line)
+                        log_res = self.log_build_buy_msg(line)
                     elif 'has joined' in line or 'has left' in line:
                         log_res = self.log_filter_joined_left_area(line)
                     elif 'trade accepted' in line:
-                        log_res = self.log_trade(line, accepted=True)
+                        log_res = self.log_trade_state(line, accepted=True)
                     elif 'trade cancelled' in line:
-                        log_res = self.log_trade(line, accepted=False)
+                        log_res = self.log_trade_state(line, accepted=False)
                     elif 'failed to join' in line:
                         log_res = self.log_trade_error(line)
                     elif 'go to this area from here' in line.lower():
