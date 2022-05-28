@@ -71,14 +71,18 @@ class TestClientLog(TestCase, ClientLog):
                 result.append(log_result)
         self.assertTrue(len(result) == 8)
 
-    @pytest.mark.slow
     def test_log_build_buy_msg(self):
         result = []
         for line in self.test_lines:
             log_result = self.log_build_buy_msg(line)
             if log_result:
+                self.assertTrue(isinstance(log_result[0], str))
+                self.assertTrue(len(log_result[0]))
+                self.assertTrue(len(log_result[1]) == 4)
+                self.assertTrue(isinstance(log_result[2], tuple))
+                self.assertTrue(len(log_result[2]) == 2)
                 result.append(log_result)
-        print(result)
+        self.assertTrue(len(result) == 7)
 
     @pytest.mark.slow
     def test_log_manage(self):
