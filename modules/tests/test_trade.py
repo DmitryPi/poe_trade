@@ -58,6 +58,19 @@ class TestClientLog(TestCase, ClientLog):
                 result.append(log_result)
         self.assertTrue(len(result) == 8)
 
+    def test_log_filter_buy_msg(self):
+        result = []
+        for line in self.test_lines:
+            log_result = self.log_filter_buy_msg(line)
+            if log_result:
+                self.assertTrue(len(log_result) == 4)
+                self.assertTrue(re.match(r'^\w+[-]\w+[-]?\w+$', log_result[0]))
+                self.assertTrue(isinstance(log_result[1], int))
+                self.assertTrue(re.match(r'^\w+[-]\w+$', log_result[2]))
+                self.assertTrue(isinstance(log_result[3], int))
+                result.append(log_result)
+        self.assertTrue(len(result) == 8)
+
     @pytest.mark.slow
     def test_log_build_buy_msg(self):
         result = []

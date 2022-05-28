@@ -91,7 +91,7 @@ class ClientLog(Base):
     def log_filter_datetime(self, line: str) -> list:
         """Return list of 2 elements: 0 - date(yyyy/mm/dd); 1 - time(hh:mm:ss)"""
         match = re.search(
-            r'\d+/\d+/\d+\s\d+:\d+:\d+', line, flags=re.IGNORECASE)
+            r'\d+/\d+/\d+\s\d+:\d+:\d+', line, flags=re.I)
         if match:
             span = match.span()
             timeframe = line[span[0]:span[1]].split(' ')
@@ -100,13 +100,30 @@ class ClientLog(Base):
     def log_filter_name(self, line: str, msg_type='from') -> str:
         """Return filtered character name from log string"""
         match = re.search(
-            r'\@{}\s.+\:'.format(msg_type), line, flags=re.IGNORECASE)
+            r'\@{}\s.+\:'.format(msg_type), line, flags=re.I)
         if match:
             span = match.span()
             char_name = line[span[0] + 5:span[1] - 1].strip()
             if ' ' in char_name:
                 char_name = char_name.split(' ')[1]
             return char_name.strip()
+
+    def log_filter_buy_msg(self, line: str) -> tuple:
+        """Filter log line trade buy message - return tuple of 4"""
+        msg = line.split(':')[3].strip()
+        """Example: buy your 20 Polished Harbinger Scarab for"""
+        msg_buy_item = re.search(r'(?<=your).*?(?=for)', msg, flags=re.I)
+        """Example: my 98 Chaos Orb in"""
+        msg_buy_currency = re.search(r'(?<=my).*?(?=in)', msg, flags=re.I)
+        if not msg_buy_item or not msg_buy_currency:
+            return None
+        msg_buy_item = msg_buy_item[0].strip()
+        msg_buy_currency = msg_buy_currency[0].strip()
+        item_id = '-'.join(re.findall('([A-Za-z]+)', msg_buy_item.lower()))
+        item_amount = int(re.search(r'\d+', msg_buy_item)[0])
+        item_currency_id = '-'.join(re.findall('([A-Za-z]+)', msg_buy_currency.lower()))
+        item_currency_amount = int(re.search(r'\d+', msg_buy_currency)[0])
+        return (item_id, item_amount, item_currency_id, item_currency_amount)
 
     def log_trade_error(self, line: str) -> tuple:
         """TODO"""
