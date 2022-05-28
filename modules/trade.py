@@ -73,7 +73,8 @@ class ClientLog(Base):
         Base.__init__(self)
         self.clientlog_path = self.app_config['TRADER']['client_log_path']
 
-    def log_datetime_filter(self, line, time_limit=60):
+    def log_filter_by_time(self, line: str, time_limit=60) -> bool:
+        """Filter log lines by time_limit"""
         try:
             time_now = datetime.now()
             match = re.search(
@@ -87,14 +88,8 @@ class ClientLog(Base):
             self.log_error(e)
             return False
 
-    def log_to_filter(self, line):
-        match = re.search(r'\@to\s.+\:', line, flags=re.IGNORECASE)
-        if match:
-            span = match.span()
-            line_char_name = line[span[0] + 3:span[1] - 1].strip()
-            return line_char_name
-
     def log_filter_timeframe(self, line):
+        """TODO"""
         match = re.search(
             r'\d+/\d+/\d+\s\d+:\d+:\d+', line, flags=re.IGNORECASE)
         if match:
@@ -102,14 +97,16 @@ class ClientLog(Base):
             timeframe = line[span[0]:span[1]].split(' ')
             return (timeframe[1], timeframe[0])
 
-    def log_from_filter(self, line):
+    def log_filter_name(self, line: str, msg_type='from') -> str:
+        """Return filtered character name from log string"""
         match = re.search(
-            r'\@from\s.+\:', line, flags=re.IGNORECASE)
+            r'\@{}\s.+\:'.format(msg_type), line, flags=re.IGNORECASE)
         if match:
             span = match.span()
-            line_char_name = line[span[0] + 5:span[1] - 1].strip()
-            return line_char_name
-        return False
+            char_name = line[span[0] + 5:span[1] - 1].strip()
+            if ' ' in char_name:
+                char_name = char_name.split(' ')[1]
+            return char_name.strip()
 
     def log_trade_error(self, line):
         msg_type = 'error'
@@ -128,13 +125,14 @@ class ClientLog(Base):
         return (msg_type, msg, timeframe[1], timeframe[0])
 
     def log_trade(self, line, accepted=True):
+        """TODO"""
         msg_type = 'accepted' if accepted else 'cancelled'
         timeframe = self.log_filter_timeframe(line)
         if not timeframe:
             return None
         return (msg_type, timeframe[1], timeframe[0])
 
-    def log_filter_buy_msg(self, line):
+    def log_filter_buy_msg(self, line: str) -> tuple:
         """TODO: position"""
         line = line.lower()
         msg_type = 'from'
@@ -152,7 +150,8 @@ class ClientLog(Base):
         msg_item = '-'.join(re.findall('([A-Za-z]+)', msg_match))
         return (msg_type, char_name, msg_item_amount, msg_item, timeframe[1], timeframe[0])
 
-    def log_filter_joined_left_area(self, line):
+    def log_filter_joined_left_area(self, line: str) -> tuple:
+        """TODO"""
         msg_type = 'joined' if 'has joined' in line else 'left'
         char_name = line.split(':')[3].split('has')[0].strip()
         if '>' in char_name:
@@ -162,15 +161,14 @@ class ClientLog(Base):
             return None
         return (msg_type, char_name, timeframe[1], timeframe[0])
 
-    def log_manage(self, time_limit=60, buy_msg=False):
-        result = list()
+    def log_manage(self, time_limit=60):
+        result = []
         with FileReadBackwards(self.clientlog_path, encoding="utf-8") as frb:
             for i, line in enumerate(frb):
                 log_res = None
                 if 'INFO' in line:
                     line = line.lower()
-                    if not self.log_datetime_filter(
-                            line, time_limit=time_limit):
+                    if not self.log_filter_by_time(line, time_limit=time_limit):
                         break
                     if '@to' in line:
                         self.log_to_filter(line)

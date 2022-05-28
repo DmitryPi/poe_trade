@@ -10,6 +10,48 @@ from ..trade import ClientLog, Seller, TradeBot
 class TestClientLog(TestCase, ClientLog):
     def setUp(self):
         ClientLog.__init__(self)
+        self.test_lines = [
+            "2022/05/03 23:44:55 294110640 bad [INFO Client 2488] @From Cyberaider: Hi, I'd like to buy your 10 Corroded Fossil for my 65 Chaos Orb in Ultimatum.",
+            "2022/05/28 01:48:27 269733406 cff9459d [INFO Client 21168] @From Dpg_CoC: Hi, I'd like to buy your 3 Exalted Orb for my 510 Chaos Orb in Sentinel.",
+            "2022/05/28 01:48:59 269764718 cff9459d [INFO Client 21168] @To BremsspurBernhard: sold",
+            "2022/05/28 01:45:22 269547718 cff9459d [INFO Client 21168] @From <øJTFø> KluskaNaKlamce: Hi, I'd like to buy your 30 Polished Divination Scarab for my 195 Chaos Orb in Sentinel.",
+            "2022/05/28 01:48:45 269751031 cff9459d [INFO Client 21168] @From <°RUDE°> BremsspurBernhard: Hi, I'd like to buy your 20 Rusted Expedition Scarab for my 98 Chaos Orb in Sentinel.",
+            "2022/05/28 01:43:24 269430328 cff9459d [INFO Client 21168] @From <øJTFø> MarjoNoHope: ty!",
+            "2022/05/28 10:39:47 301612937 cff9459d [INFO Client 8220] @From muzzchump: Hi, I'd like to buy your 20 Polished Harbinger Scarab for my 98 Chaos Orb in Sentinel.",
+            "2022/05/28 10:40:04 301630281 cff9459d [INFO Client 8220] : muzzchump has joined the area.",
+            "2022/05/28 11:15:55 303781140 cff9459d [INFO Client 8220] @From Пюрен: Hi, I'd like to buy your 20 Gilded Blight Scarab for my 110 Chaos Orb in Sentinel.",
+            "2022/05/28 11:31:23 304709515 cff9459d [INFO Client 6620] @From 아버지아버지아버지: Hi, I'd like to buy your 27 Gilded Reliquary Scarab for my 135 Chaos Orb in Sentinel.",
+            "2022/05/28 11:34:31 304897078 cff9459d [INFO Client 6620] @To 異體字異體字: Hi, I'd like to buy your 27 Gilded Reliquary Scarab for my 135 Chaos Orb in Sentinel.",
+        ]
+
+    def test_log_filter_name(self):
+        result = []
+        for line in self.test_lines:
+            log_result = self.log_filter_name(line, msg_type='from')
+            if log_result:
+                self.assertTrue('<' not in log_result)
+                self.assertTrue('>' not in log_result)
+                result.append(log_result)
+        self.assertTrue(len(result) == 8)
+
+    def test_log_filter_by_time(self):
+        result = []
+        for line in self.test_lines:
+            log_result = self.log_filter_by_time(line, time_limit=120)
+            if log_result:
+                result.append(log_result)
+        self.assertTrue(not len(result))
+        for line in self.test_lines:
+            log_result = self.log_filter_by_time(line, time_limit=9999999)
+            if log_result:
+                result.append(log_result)
+        self.assertTrue(len(result) == 11)
+
+    @pytest.mark.slow
+    def test_log_manage(self):
+        log_results = self.log_manage(time_limit=300)
+        for log in log_results:
+            print(log)
 
 
 class TestSeller(TestCase, Seller):
