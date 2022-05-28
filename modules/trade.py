@@ -133,8 +133,19 @@ class ClientLog(Base):
             return None
         return (msg_type, msg, datetime)
 
-    def log_trade_state(self, line: str, accepted=True) -> tuple:
-        """Return filtered state for trade msg, TODO"""
+    def log_filter_instance_state(self, line: str) -> tuple:
+        """Filter log line if player joined or left instance(hideout)"""
+        msg_type = 'joined' if 'has joined' in line else 'left'
+        char_name = line.split(':')[3].split('has')[0].strip()
+        if '>' in char_name:
+            char_name = char_name.split('>')[1].strip()
+        datetime = self.log_filter_datetime(line)
+        if not datetime:
+            return None
+        return (msg_type, char_name, datetime)
+
+    def log_filter_trade_state(self, line: str, accepted=True) -> tuple:
+        """Return filtered state for trade msg"""
         msg_type = 'accepted' if accepted else 'cancelled'
         datetime = self.log_filter_datetime(line)
         if not datetime:
@@ -150,18 +161,8 @@ class ClientLog(Base):
             return None
         return (char_name, msg_data, datetime)
 
-    def log_filter_joined_left_area(self, line: str) -> tuple:
-        """TODO"""
-        msg_type = 'joined' if 'has joined' in line else 'left'
-        char_name = line.split(':')[3].split('has')[0].strip()
-        if '>' in char_name:
-            char_name = char_name.split('>')[1].strip()
-        datetime = self.log_filter_datetime(line)
-        if not datetime:
-            return None
-        return (msg_type, char_name, datetime)
-
     def log_manage(self, time_limit=60):
+        """TODO: unit-test"""
         result = []
         with FileReadBackwards(self.clientlog_path, encoding="utf-8") as frb:
             for i, line in enumerate(frb):
@@ -175,11 +176,11 @@ class ClientLog(Base):
                     elif '@from' in line:
                         log_res = self.log_build_buy_msg(line)
                     elif 'has joined' in line or 'has left' in line:
-                        log_res = self.log_filter_joined_left_area(line)
-                    elif 'trade accepted' in line:
-                        log_res = self.log_trade_state(line, accepted=True)
+                        log_res = self.log_filter_instance_state(line)
+                    elif 'trade accepted' in line:  # todo refactor like previous line
+                        log_res = self.log_filter_trade_state(line, accepted=True)
                     elif 'trade cancelled' in line:
-                        log_res = self.log_trade_state(line, accepted=False)
+                        log_res = self.log_filter_trade_state(line, accepted=False)
                     elif 'failed to join' in line:
                         log_res = self.log_filter_trade_error(line, msg_type='error')
                     elif 'go to this area from here' in line.lower():

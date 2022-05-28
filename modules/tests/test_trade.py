@@ -23,6 +23,17 @@ class TestClientLog(TestCase, ClientLog):
             "2022/05/28 11:15:55 303781140 cff9459d [INFO Client 8220] @From Пюрен: Hi, I'd like to buy your 20 Gilded Blight Scarab for my 110 Chaos Orb in Sentinel.",
             "2022/05/28 11:31:23 304709515 cff9459d [INFO Client 6620] @From 아버지아버지아버지: Hi, I'd like to buy your 27 Gilded Reliquary Scarab for my 135 Chaos Orb in Sentinel.",
             "2022/05/28 11:34:31 304897078 cff9459d [INFO Client 6620] @To 異體字異體字: Hi, I'd like to buy your 27 Gilded Reliquary Scarab for my 135 Chaos Orb in Sentinel.",
+            "2022/05/28 17:33:16 326422562 cff9459d [INFO Client 8768] : Trade accepted.",
+            "2022/05/28 17:33:08 326414015 cff9459d [INFO Client 8768] : Trade cancelled.",
+            "2022/05/28 17:36:55 326641546 cff9459d [INFO Client 8768] : Trade accepted.",
+            "2022/05/28 17:36:55 326641546 cff9459d [INFO Client 8768] : Trade cancelled.",
+        ]
+        self.test_lines_1 = [
+            "2022/05/28 17:35:06 326532046 cff9459d [INFO Client 8768] : Daleellaa has joined the area.",
+            "2022/05/28 17:34:53 326519609 cff9459d [INFO Client 8768] : Padak_Wp has left the area.",
+            "2022/05/28 17:35:06 326532046 cff9459d [INFO Client 8768] : 아버지아버지아버지 has joined the area.",
+            "2022/05/28 17:34:53 326519609 cff9459d [INFO Client 8768] : Пюрен has left the area.",
+            "2022/05/28 17:33:53 326459093 cff9459d [INFO Client 8768] : มาเเจกดวง has left the area.",
         ]
 
     def test_log_filter_by_time(self):
@@ -36,7 +47,7 @@ class TestClientLog(TestCase, ClientLog):
             log_result = self.log_filter_by_time(line, time_limit=9999999)
             if log_result:
                 result.append(log_result)
-        self.assertTrue(len(result) == 11)
+        self.assertTrue(len(result) == len(self.test_lines))
 
     def test_log_filter_datetime(self):
         result = []
@@ -46,7 +57,7 @@ class TestClientLog(TestCase, ClientLog):
                 self.assertTrue(re.match(r'^\d{4}[/]\d{2}[/]\d{2}$', log_result[0]))
                 self.assertTrue(re.match(r'^\d{2}[:]\d{2}[:]\d{2}$', log_result[1]))
                 result.append(log_result)
-        self.assertTrue(len(result) == 11)
+        self.assertTrue(len(result) == len(self.test_lines))
 
     def test_log_filter_name(self):
         result = []
@@ -70,6 +81,18 @@ class TestClientLog(TestCase, ClientLog):
                 self.assertTrue(isinstance(log_result[3], int))
                 result.append(log_result)
         self.assertTrue(len(result) == 8)
+
+    def test_log_filter_instance_state(self):
+        result = []
+        for line in self.test_lines_1:
+            log_result = self.log_filter_instance_state(line)
+            if log_result:
+                self.assertTrue(len(log_result) == 3)
+                self.assertTrue(log_result[0] == 'joined' or log_result[0] == 'left')
+                self.assertTrue(isinstance(log_result[2], tuple))
+                self.assertTrue(len(log_result[2]) == 2)
+                result.append(log_result)
+        self.assertTrue(len(result) == len(self.test_lines_1))
 
     def test_log_build_buy_msg(self):
         result = []
