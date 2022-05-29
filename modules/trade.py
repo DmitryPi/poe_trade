@@ -671,7 +671,10 @@ class Trader(TradeDB, Base):
                                 break
                     if buy_limit:
                         print('- Buy limit reached:', trade_item['item_id'], trade_item['buy_limit'])
-                        trade_item_counter += 1
+                        if trade_item_counter >= trade_items_len - 1:
+                            trade_item_counter = 0  # TODO: refactor repeats
+                        else:
+                            trade_item_counter += 1
                         buy_limit = False
                         time.sleep(1)
                         continue
