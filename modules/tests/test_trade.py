@@ -5,7 +5,7 @@ import pytest
 
 from unittest import TestCase
 
-from ..trade import ClientLog, Seller, TradeBot
+from ..trade import ClientLog, TradeBot
 
 
 class TestClientLog(TestCase, ClientLog):
@@ -112,11 +112,6 @@ class TestClientLog(TestCase, ClientLog):
         log_results = self.log_manage(time_limit=300)
         for log in log_results:
             print(log)
-
-
-class TestSeller(TestCase, Seller):
-    def setUp(self):
-        pass
 
 
 class TestTradeBot(TestCase, TradeBot):

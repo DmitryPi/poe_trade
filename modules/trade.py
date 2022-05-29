@@ -171,9 +171,7 @@ class ClientLog(Base):
                     line = line.lower()
                     if not self.log_filter_by_time(line, time_limit=time_limit):
                         break
-                    if '@to' in line:
-                        self.log_to_filter(line)
-                    elif '@from' in line:
+                    if '@from' in line:
                         log_res = self.log_build_buy_msg(line)
                     elif 'has joined' in line or 'has left' in line:
                         log_res = self.log_filter_instance_state(line)
@@ -719,19 +717,6 @@ class Trader(TradeDB, Base):
                 time.sleep(1)
             time.sleep(self.main_loop_delay)
         return 0
-
-
-class Seller(ClientLog, KeyActions, OCRChecker):
-    def __init__(self):
-        self.trade_sell_queue = Queue()
-        ClientLog.__init__(self)
-        OCRChecker.__init__(self)
-        KeyActions.__init__(self)
-        """
-            0: Get bought items
-                if bought item > 100:
-                    1: set_stash_price
-        """
 
 
 class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
@@ -1355,6 +1340,14 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                 if len(trade_user_items) >= trade_user[7]:
                     self.check_trade_opened(accept=True)
 
+    def run_seller(self):
+        """
+            Get summary_items
+
+                if bought item > 100:
+                    1: set_stash_price
+        """
+
     def run_buyer(self):
         db_conn = self.db_create_connection()
         current_trade_user = None
@@ -1369,6 +1362,16 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
 
         try:  # remove trade_summary on bot init
             os.remove(self.trade_summary_path)
+            # trade_summary = self.load_json_file(self.trade_summary_path)
+            # if trade_summary:
+            #     for summary in trade_summary:
+            #         print(summary)
+            #         summary.update({
+            #             'item_amount': 0,
+            #             'item_buy_price': 0,
+            #             'item_sell_price': 0
+            #         })
+            #     self.update_json_file(trade_summary, self.trade_summary_path)
         except FileNotFoundError:
             pass
 
