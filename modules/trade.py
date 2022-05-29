@@ -1493,7 +1493,8 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                     trade_started_at = datetime.now()
                 if not timer % 10:
                     print('- Timer:', timer)
-                    self.random_right_click()
+                    if current_currency:
+                        self.random_right_click()
                 if timer >= self.trade_timer_limit:
                     print('- Trade limit reached: ', timer)
                     trade_opened = False
