@@ -10,6 +10,11 @@ class TestBase(TestCase, Base):
         Base.__init__(self)
 
     @pytest.mark.slow
+    def test_random_right_click(self):
+        for i in range(15):
+            self.random_right_click()
+
+    @pytest.mark.slow
     def test_mouse_move(self):
         self.mouse_move(1000, 500)
         self.mouse_move(1500, 500, delay=True)

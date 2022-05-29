@@ -210,6 +210,18 @@ class Base:
             threaded=True
         )
 
+    def random_right_click(self, num=5, bound_rect=[], rng=[1, 8]) -> None:
+        """Randomly move to bound_rect range position and click rmb
+           num - to compare with rng=[]; bound_rect=[x1, y1, x2, y2]"""
+        randnum = random.randrange(*rng)
+        if randnum == num:
+            bound_rect = [450, 230, 970, 660] if not bound_rect else bound_rect
+            pos_x, pos_y = pyautogui.position()
+            x = random.randrange(bound_rect[0], bound_rect[2])
+            y = random.randrange(bound_rect[1], bound_rect[3])
+            wind_mouse(pos_x, pos_y, x, y, move_mouse=win32api.SetCursorPos)
+            self.mouse_move_click(btn='right')
+
     def mouse_move(self, x: int, y: int, humanlike=True, delay=False):
         """Move mouse with pyautogui or win32api;
            humanlike=True to move mouse randomly"""
