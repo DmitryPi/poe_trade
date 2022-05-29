@@ -940,7 +940,8 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
                 'rusted-harbinger-scarab': 0.70,
                 'polished-harbinger-scarab': 0.8,
                 'gilded-harbinger-scarab': 0.81,
-                'polished-cartography-scarab': 0.75
+                'polished-cartography-scarab': 0.75,
+                'gilded-cartography-scarab': 0.8,
             }
             threshold = threshold[item_name]
         detected_objects = self.cv_detect_boilerplate(
@@ -1342,10 +1343,28 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
 
     def run_seller(self):
         """
-            Get summary_items
+            Separate thread
+                Request poe.ninja - get exalt-chao ratio
+                    new db table?
+                    update item_liquidity
+                           item_ninja_sell_price
 
-                if bought item > 100:
-                    1: set_stash_price
+            Separate thread for hideout state
+                Deduct users that are in hideout
+
+            Get summary_items
+                if summary_item_amount > 100 and not summary_item_sell_price:
+                    Request api - build_cleaned data - check for bulk sellers
+                        update summary_item_sell_price
+                    set_price
+
+            ClientLog check for buy messages
+                if not invite limit
+                    Invite user
+                        Append user to current_trade_users
+
+            Check current_trade_users and hideout_state
+                Prepare items
         """
 
     def run_buyer(self):
