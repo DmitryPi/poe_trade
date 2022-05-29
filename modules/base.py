@@ -210,7 +210,7 @@ class Base:
             threaded=True
         )
 
-    def random_right_click(self, num=5, bound_rect=[], rng=[1, 8]) -> None:
+    def random_right_click(self, num=5, bound_rect=[], rng=[1, 6]) -> None:
         """Randomly move to bound_rect range position and click rmb
            num - to compare with rng=[]; bound_rect=[x1, y1, x2, y2]"""
         randnum = random.randrange(*rng)
