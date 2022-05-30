@@ -671,13 +671,16 @@ class Trader(TradeDB, Base):
                                 break
                     if buy_limit:
                         print('- Buy limit reached:', trade_item['item_id'], trade_item['buy_limit'])
-                        if trade_item_counter >= trade_items_len - 1:
-                            trade_item_counter = 0  # TODO: refactor repeats
-                        else:
-                            trade_item_counter += 1
+                        trade_item['max_stock_price'] -= 1
+                        trade_item['min_stock_amount'] = 2
+                        trade_item['buy_limit'] += 100
                         buy_limit = False
-                        time.sleep(1)
-                        continue
+                        # if trade_item_counter >= trade_items_len - 1:
+                        #     trade_item_counter = 0  # TODO: refactor repeats
+                        # else:
+                        #     trade_item_counter += 1
+                        # buy_limit = False
+                        # time.sleep(1)
 
                 """Check if trade_item disabled"""
                 if trade_item['disabled']:
@@ -736,7 +739,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
             'PRETRADE': 'PRETRADE',
             'TRADE': 'TRADE',
         }
-        self.trade_timer_limit = 130
+        self.trade_timer_limit = 140
         self.stash_items_position = {
             'bestiary': [85, 210],
             'reliquary': [85, 275],
