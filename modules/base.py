@@ -521,6 +521,12 @@ class OCRChecker(Base):
             template, threshold=threshold, crop=self.crop['stash'])[0]
         return bool(detected_objects)
 
+    def check_stash_item_dropdown(self, threshold=0.8):
+        template = 'assets/ui/stash_btn_dropdown.png'
+        detected_objects = self.cv_detect_boilerplate(
+            template, threshold=threshold, calc_mp=True, crop=self.crop['stash'])[0]
+        return detected_objects[0] if detected_objects else []
+
     def check_trade_opened(self, threshold=0.75, accept=False):
         template = 'assets/ui/trade.png'
         detected_objects = self.cv_detect_boilerplate(

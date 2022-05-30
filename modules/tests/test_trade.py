@@ -13,6 +13,7 @@ class TestPrices(TestCase, Prices):
         Prices.__init__(self)
         self.scarab_id = 'rusted-expedition-scarab'
 
+    @pytest.mark.slow
     def test_get_ninja_api(self):
         """Test get ninja currency"""
         resp = self.get_ninja_api(self.ninja_overviews[0], self.ninja_currency_types[0])
@@ -29,11 +30,13 @@ class TestPrices(TestCase, Prices):
         self.assertTrue(resp['chaosValue'])
         self.assertTrue(resp['lowConfidenceSparkline']['totalChange'])
 
+    @pytest.mark.slow
     def test_get_ninja_exalt_ratio(self):
         exalt_price = self.get_ninja_exalt_price()
         self.assertTrue(isinstance(exalt_price, int))
         self.assertTrue(exalt_price >= 50)
 
+    @pytest.mark.slow
     def test_get_ninja_scarab_price(self):
         resp = self.get_ninja_scarab_price(self.scarab_id)
         self.assertTrue(isinstance(resp, dict))
@@ -179,6 +182,7 @@ class TestTradeBot(TestCase, TradeBot):
     @pytest.mark.slow
     def test_stash_set_price(self):
         scarabs = [
+            ('polished-ambush-scarab', 20),
             ('rusted-expedition-scarab', 50),
             ('polished-expedition-scarab', 20),
             ('gilded-divination-scarab', '5/50'),

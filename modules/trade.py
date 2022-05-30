@@ -804,10 +804,8 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 },
             },
         }
-        if not self.check_stash_opened():
-            self.check_open_stash()
-            time.sleep(1)
         try:
+            print('- Activating tab:', tab)
             tab_main = tabs[tab]['main']
             tab_sub = tabs[tab]['sub'].get(subtab, None)
             self.mouse_move(*tab_main)
@@ -836,6 +834,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 return rows[i]
 
     def stash_take_item(self, item_id: str, amount=0) -> None:
+        print('- Taking item {} - {}'.format(item_id, amount))
         if 'scarab' in item_id:
             amount = math.ceil(amount / 10)  # calc amount of clicks ;+1 for safety
             scarab_pos = self.stash_get_scarab_position(item_id)
@@ -844,6 +843,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             self.mouse_move_click(clicks=amount, interval=0.25, ctrl=True)
 
     def stash_set_item_price(self, item_id: str, price: str) -> None:
+        print('- Setting price {} for {}'.format(price, item_id))
         if 'scarab' in item_id:
             self.stash_activate_tab('fragment', 'scarab')
             time.sleep(0.3)
@@ -853,8 +853,11 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             time.sleep(0.2)
             self.mouse_move_click(btn='right')
             """Hover over price dropdown"""
-            x_pos, y_pos = pyautogui.position()
-            self.mouse_move(x_pos - 150, y_pos + 90, delay=True)
+            for i in range(3):  # attemp to get dropdown btn
+                x_pos, y_pos = self.check_stash_item_dropdown()
+                if x_pos:
+                    break
+            self.mouse_move(x_pos, y_pos, delay=True)
             self.mouse_move_click()
             """Select dropdown type - Exact Price"""
             x_pos, y_pos = pyautogui.position()
@@ -862,7 +865,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             self.mouse_move_click()
             """Hover over price box - click"""
             x_pos, y_pos = pyautogui.position()
-            self.mouse_move(x_pos + 125, y_pos - 80, delay=True)
+            self.mouse_move(x_pos + 55, y_pos - 80, delay=True)
             self.mouse_move_click()
             """Insert price"""
             self.keyboard_select_text()
@@ -871,7 +874,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             self.keyboard_paste()
             """Click accept button"""
             x_pos, y_pos = pyautogui.position()
-            self.mouse_move(x_pos + 245, y_pos + 45, delay=True)
+            self.mouse_move(x_pos + 240, y_pos + 45, delay=True)
             self.mouse_move_click()
 
     def check_item(self, item_name, amount=0, trade=False, inventory=False):
@@ -1367,6 +1370,25 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             Check current_trade_users and hideout_state
                 Prepare items
         """
+        trade_summary = self.load_json_file(self.trade_summary_path)
+        while True:
+            """Seller init state"""
+            for summary in trade_summary:
+                """Set stash price with trade_summary data"""
+                if not summary['item_sell_price'] and summary['item_amount'] >= 50:
+                    if 'scarab' not in summary['item_id']:
+                        continue
+                    while not self.check_stash_opened():
+                        self.check_open_stash()
+                        time.sleep(1)
+                    item_price = str(round((summary['item_buy_price'] + 1.5) * 10)) + '/10'
+                    self.stash_set_item_price(summary['item_id'], item_price)  # fix polished_ambush
+                    summary['item_sell_price'] = item_price
+                    self.update_json_file(trade_summary, self.trade_summary_path)
+                    trade_summary = self.load_json_file(self.trade_summary_path)
+            """Seller pre-trade state"""
+            """Remove alerts - Check log - invite user - prepare item"""
+            time.sleep(1)
 
     def run_buyer(self):
         db_conn = self.db_create_connection()
@@ -1406,6 +1428,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 self.set_state(self.STATES['START'])
                 continue
             elif self.STATE == 'START':
+                """Check if buy msges - switch to run_seller"""
                 self.app_window_focus()
                 if self.check_hideout() or len(self.check_invite()) > 2:
                     invites = self.check_invite(check_type=True)
