@@ -645,8 +645,8 @@ class Trader(TradeDB, Base):
                     for summary in trade_summary:
                         """check if trade_summary amount == buy_limit"""
                         if trade_item['item_id'] == summary['item_id']:
-                            """update trade_summary item_price"""
-                            if not summary.get('item_price'):
+                            """update trade_summary item_buy_price"""
+                            if not summary.get('item_buy_price'):
                                 summary.update({'item_buy_price': trade_item['max_stock_price']})
                                 self.update_json_file(trade_summary, self.trade_summary_path)
                                 print('- Trade summary updated')
@@ -1375,8 +1375,13 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             """Check log - invite user - prepare item"""
             # self.check_remove_alerts()
             log_result = self.log_manage(time_limit=30)
-            for line in log_result:
-                print(line)
+            for log in log_result:
+                try:
+                    if log[1][0] == 'buy':
+                        char_name, buy_item, datetime = log
+                        print(char_name, buy_item, datetime)
+                except IndexError:
+                    continue
             time.sleep(1)
 
     def run_buyer(self):
