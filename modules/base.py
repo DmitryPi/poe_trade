@@ -433,6 +433,7 @@ class OCRChecker(Base):
             template, threshold=threshold, calc_mp=True)[:3]
         for pt in sorted(detected_objects):
             self.mouse_move_click(pt[0], pt[1], delay=True)
+            time.sleep(0.15)
 
     def check_remove_surplus(self, max_amount, threshold=0.85):
         template = 'assets/items/c_chaos_10.png'

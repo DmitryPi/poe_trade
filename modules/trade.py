@@ -123,7 +123,7 @@ class ClientLog(Base):
         item_amount = int(re.search(r'\d+', msg_buy_item)[0])
         item_currency_id = '-'.join(re.findall('([A-Za-z]+)', msg_buy_currency.lower()))
         item_currency_amount = int(re.search(r'\d+', msg_buy_currency)[0])
-        return (item_id, item_amount, item_currency_id, item_currency_amount)
+        return ('buy', item_id, item_amount, item_currency_id, item_currency_amount)
 
     def log_filter_trade_error(self, line: str, msg_type='error') -> tuple:
         """Return filtered log error"""
@@ -1372,7 +1372,11 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                     self.update_json_file(trade_summary, self.trade_summary_path)
                     trade_summary = self.load_json_file(self.trade_summary_path)
             """Seller pre-trade state"""
-            """Remove alerts - Check log - invite user - prepare item"""
+            """Check log - invite user - prepare item"""
+            # self.check_remove_alerts()
+            log_result = self.log_manage(time_limit=30)
+            for line in log_result:
+                print(line)
             time.sleep(1)
 
     def run_buyer(self):

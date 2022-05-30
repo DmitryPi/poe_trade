@@ -111,11 +111,12 @@ class TestClientLog(TestCase, ClientLog):
         for line in self.test_lines:
             log_result = self.log_filter_buy_msg(line)
             if log_result:
-                self.assertTrue(len(log_result) == 4)
-                self.assertTrue(re.match(r'^\w+[-]\w+[-]?\w+$', log_result[0]))
-                self.assertTrue(isinstance(log_result[1], int))
-                self.assertTrue(re.match(r'^\w+[-]\w+$', log_result[2]))
-                self.assertTrue(isinstance(log_result[3], int))
+                self.assertTrue(len(log_result) == 5)
+                self.assertTrue(log_result[0] == 'buy')
+                self.assertTrue(re.match(r'^\w+[-]\w+[-]?\w+$', log_result[1]))
+                self.assertTrue(isinstance(log_result[2], int))
+                self.assertTrue(re.match(r'^\w+[-]\w+$', log_result[3]))
+                self.assertTrue(isinstance(log_result[4], int))
                 result.append(log_result)
         self.assertTrue(len(result) == 8)
 
@@ -138,7 +139,7 @@ class TestClientLog(TestCase, ClientLog):
             if log_result:
                 self.assertTrue(isinstance(log_result[0], str))
                 self.assertTrue(len(log_result[0]))
-                self.assertTrue(len(log_result[1]) == 4)
+                self.assertTrue(len(log_result[1]) == 5)
                 self.assertTrue(isinstance(log_result[2], tuple))
                 self.assertTrue(len(log_result[2]) == 2)
                 result.append(log_result)
