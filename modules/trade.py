@@ -739,7 +739,7 @@ class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
             'PRETRADE': 'PRETRADE',
             'TRADE': 'TRADE',
         }
-        self.trade_timer_limit = 140
+        self.trade_timer_limit = 150
         self.stash_items_position = {
             'bestiary': [85, 210],
             'reliquary': [85, 275],
