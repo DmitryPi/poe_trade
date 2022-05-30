@@ -187,21 +187,6 @@ class ClientLog(Base):
                     result.append(log_res)
         return result
 
-    def run(self):
-        # test_lines = [
-        #     "2021/05/03 23:44:55 294110640 bad [INFO Client 2488] @From Cyberaider: Hi, I'd like to buy your 10 Corroded Fossil for my 65 Chaos Orb in Ultimatum.",
-        #     "2021/05/03 23:46:04 294180250 bad [INFO Client 2488] @From <WizTv> Zboub_WorstLeagueStartE: Hi, I'd like to buy your 20 Shuddering Fossil for my 110 Chaos Orb in Ultimatum.",
-        #     "2021/05/03 23:46:35 294210906 bad [INFO Client 2488] @From Cyberaider: sry bad calcul",
-        #     "2021/05/04 00:23:06 296401656 bad [info client 2488] @From eggfooyoungnoegg: hi, i would like to buy your astramentis onyx amulet listed for 23 chaos in ultimatum (stash tab '~price 23 chaos'; position: left 1, top 2",
-        #     "2021/05/05 22:14:10 105383406 bad [INFO Client 5604] @From <AXIOM> MyHQflame: Hi, I'd like to buy your 30 Rusted Legion Scarab for my 234 Chaos Orb in Ultimatum."
-        # ]
-        # for line in test_lines:
-        #     res = self.log_from_buy_msg(line)
-        #     print(res)
-        log_result = self.log_manage(time_limit=300)
-        for line in reversed(log_result):
-            print(line)
-
 
 class Trader(TradeDB, Base):
     def __init__(self):
