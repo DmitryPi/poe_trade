@@ -5,7 +5,41 @@ import pytest
 
 from unittest import TestCase
 
-from ..trade import ClientLog, TradeBot
+from ..trade import Prices, ClientLog, TradeBot
+
+
+class TestPrices(TestCase, Prices):
+    def setUp(self):
+        Prices.__init__(self)
+        self.scarab_id = 'rusted-expedition-scarab'
+
+    def test_get_ninja_api(self):
+        """Test get ninja currency"""
+        resp = self.get_ninja_api(self.ninja_overviews[0], self.ninja_currency_types[0])
+        self.assertTrue(len(resp['lines']))
+        resp = resp['lines'][0]
+        self.assertTrue(resp['chaosEquivalent'])
+        self.assertTrue(resp['currencyTypeName'])
+
+        """Test get ninja scarabs"""
+        resp = self.get_ninja_api(self.ninja_overviews[1], self.ninja_item_types[0])
+        self.assertTrue(len(resp['lines']))
+        resp = resp['lines'][0]
+        self.assertTrue('scarab' in resp['detailsId'])
+        self.assertTrue(resp['chaosValue'])
+        self.assertTrue(resp['lowConfidenceSparkline']['totalChange'])
+
+    def test_get_ninja_exalt_ratio(self):
+        exalt_price = self.get_ninja_exalt_price()
+        self.assertTrue(isinstance(exalt_price, int))
+        self.assertTrue(exalt_price >= 50)
+
+    def test_get_ninja_scarab_price(self):
+        resp = self.get_ninja_scarab_price(self.scarab_id)
+        self.assertTrue(isinstance(resp, dict))
+        self.assertTrue(len(resp) == 4)
+        self.assertTrue(resp['item_id'] == self.scarab_id)
+        self.assertTrue(resp['chaos_value'] >= 1)
 
 
 class TestClientLog(TestCase, ClientLog):

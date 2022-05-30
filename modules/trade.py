@@ -23,49 +23,49 @@ from modules.keys import KeyActions
 class Prices(Base):
     def __init__(self):
         super().__init__()
-        self.prices_config = self.app_config['PRICES']
-        self.ninja_base_url = self.prices_config['ninja_api_base_url']
-        self.ninja_overviews = json.loads(
-            self.prices_config['ninja_api_overviews'])
-        self.ninja_currency_types = json.loads(
-            self.prices_config['ninja_api_currency_types'])
-        self.ninja_item_types = json.loads(
-            self.prices_config['ninja_api_item_types'])
+        self.ninja_base_url = 'https://poe.ninja/api/data/'
+        self.ninja_overviews = ['currencyoverview', 'itemoverview']
+        self.ninja_currency_types = ['Currency', 'Fragment']
+        self.ninja_item_types = ['Scarab', 'DivinationCard', 'Fragment', 'Fossil']
 
-    def build_ninja_uri(self, overview, item_type):
+    def build_ninja_url(self, overview: str, item_type: str) -> str:
         query = '?league=%s&type=%s' % (self.trade_league, item_type)
-        uri = self.ninja_base_url + overview + query
-        return uri
+        url = self.ninja_base_url + overview + query
+        return url
 
-    def get_ninja_api(self, overview, item_type):
-        uri = self.build_ninja_uri(overview, item_type)
+    def get_ninja_api(self, overview: str, item_type: str) -> dict:
+        url = self.build_ninja_url(overview, item_type)
         api_err_msg = f'- Can\'t access poe.ninja API'
         try:
-            resp = requests.get(uri)
+            resp = requests.get(url)
             if resp.status_code == 200:
                 return json.loads(resp.content)
             else:
-                print(api_err_msg + f'\n  {uri}')
+                print(api_err_msg + f'\n  {url}')
         except Exception as e:
             self.log_error(e)
-            self.show_toast(api_err_msg + str(e))
 
-    def build_cleaned_data(self, data):
-        """datakeys: lines, currencyDetails, language"""
-        for item in data['lines']:
-            if 'chaosEquivalent' in item:
-                print(item['detailsId'], item['chaosEquivalent'])
-            elif 'chaosValue' in item:
-                print(item['detailsId'], item['chaosValue'])
+    def get_ninja_exalt_price(self) -> int:
+        """Return poe ninja exalt price"""
+        resp = self.get_ninja_api(self.ninja_overviews[0], self.ninja_currency_types[0])
+        for obj in resp['lines']:
+            if obj['currencyTypeName'] == 'Exalted Orb':
+                return int(obj['chaosEquivalent'])
 
-    def run(self):
-        resp_curr = self.get_ninja_api(
-            self.ninja_overviews[0],
-            self.ninja_currency_types[0])
-        resp_item = self.get_ninja_api(
-            self.ninja_overviews[1],
-            self.ninja_item_types[0])
-        self.build_cleaned_data(resp_item)
+    def get_ninja_scarab_price(self, scarab_id: str) -> dict:
+        """Return poe ninja singular scarab data"""
+        resp = self.get_ninja_api(self.ninja_overviews[1], self.ninja_item_types[0])
+        scarab = {}
+        for obj in resp['lines']:
+            if obj['detailsId'] == scarab_id:
+                scarab.update({
+                    'item_id': obj['detailsId'],
+                    'item_listing_count': obj['listingCount'],
+                    'chaos_value': obj['chaosValue'],
+                    'price_change': obj['lowConfidenceSparkline'].get('totalChange', 0),
+                })
+                break
+        return scarab
 
 
 class ClientLog(Base):
@@ -480,7 +480,7 @@ class Trader(TradeDB, Base):
         )
         return sorted_data
 
-    def send_whisper(self, whisper):
+    def send_whisper(self, whisper: str) -> None:
         self.app_window_focus()
         if self.check_app_window():
             self.pyperclip_copy(whisper)
@@ -675,12 +675,6 @@ class Trader(TradeDB, Base):
                         trade_item['min_stock_amount'] = 2
                         trade_item['buy_limit'] += 100
                         buy_limit = False
-                        # if trade_item_counter >= trade_items_len - 1:
-                        #     trade_item_counter = 0  # TODO: refactor repeats
-                        # else:
-                        #     trade_item_counter += 1
-                        # buy_limit = False
-                        # time.sleep(1)
 
                 """Check if trade_item disabled"""
                 if trade_item['disabled']:
@@ -725,9 +719,10 @@ class Trader(TradeDB, Base):
         return 0
 
 
-class TradeBot(ClientLog, Trader, KeyActions, OCRChecker):
+class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
     def __init__(self):
         self.whisper_queue = Queue()
+        Prices.__init__(self)
         ClientLog.__init__(self)
         Trader.__init__(self)
         KeyActions.__init__(self)
