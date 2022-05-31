@@ -1024,7 +1024,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 detected_objects = self.cv_detect_boilerplate(
                     template, threshold=threshold,
                     lst=True, crop=crop)[0]
-                print(detected_objects)
                 return items if detected_objects else []
         elif 'card' in item_name:
             threshold = {
