@@ -1288,6 +1288,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 pass
 
     def manage_trade(self, give_items, trade_user):
+        """TODO: Bug sometimes given items calculates incorrectly"""
         given_items = list()
         for pt in give_items:
             item = self.check_item(
@@ -1354,33 +1355,52 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             Check current_trade_users and hideout_state
                 Prepare items
         """
+        hideout_state = []
+        trade_users = []
         trade_summary = self.load_json_file(self.trade_summary_path)
+        test_users = [('potatogamer', ('buy', 'rusted-expedition-scarab', 20, 'chaos-orb', 78), ('2022/05/31', '11:36:20'))]
+        test_joined = [('joined', 'potatogamer', ('2022/05/31', '11:36:36'))]
+        test_left = [('left', 'potatogamer', ('2022/05/31', '11:36:48'))]
         while True:
-            """Seller init state"""
-            for summary in trade_summary:
-                """Set stash price with trade_summary data"""
-                if not summary['item_sell_price'] and summary['item_amount'] >= 50:
-                    if 'scarab' not in summary['item_id']:
-                        continue
-                    while not self.check_stash_opened():
-                        self.check_open_stash()
-                        time.sleep(1)
-                    item_price = str(round((summary['item_buy_price'] + 1.5) * 10)) + '/10'
-                    self.stash_set_item_price(summary['item_id'], item_price)  # fix polished_ambush
-                    summary['item_sell_price'] = item_price
-                    self.update_json_file(trade_summary, self.trade_summary_path)
-                    trade_summary = self.load_json_file(self.trade_summary_path)
-            """Seller pre-trade state"""
-            """Check log - invite user - prepare item"""
-            # self.check_remove_alerts()
-            log_result = self.log_manage(time_limit=30)
-            for log in log_result:
-                try:
+            if not self.STATE:
+                hideout_state = []
+                trade_users = []
+                self.set_state('HIDEOUT')
+                continue
+            elif self.STATE == 'START':
+                """Checks trade_summary and sets prices"""
+                for summary in trade_summary:
+                    """Set stash price with trade_summary data"""
+                    if not summary['item_sell_price'] and summary['item_amount'] >= 50:
+                        if 'scarab' not in summary['item_id']:
+                            continue
+                        while not self.check_stash_opened():
+                            self.check_open_stash()
+                            time.sleep(1)
+                        item_price = str(round((summary['item_buy_price'] + 1.5) * 10)) + '/10'
+                        self.stash_set_item_price(summary['item_id'], item_price)  # fix polished_ambush
+                        summary['item_sell_price'] = item_price
+                        self.update_json_file(trade_summary, self.trade_summary_path)
+                        trade_summary = self.load_json_file(self.trade_summary_path)
+                self.set_state('HIDEOUT')
+                continue
+            elif self.STATE == 'HIDEOUT':
+                if hideout_state and trade_users:
+                    self.set_state('PRETRADE')
+                    continue
+                """Check log - invite user - prepare item"""
+                # self.check_remove_alerts()
+                log_result = self.log_manage(time_limit=240)
+                for log in log_result:
                     if log[1][0] == 'buy':
                         char_name, buy_item, datetime = log
-                        print(char_name, buy_item, datetime)
-                except IndexError:
-                    continue
+                        print(log)
+                    elif log[0] == 'joined':
+                        print(log)
+                    elif log[0] == 'left':
+                        print(log)
+            elif self.STATE == 'PRETRADE':
+                pass
             time.sleep(1)
 
     def run_buyer(self):
