@@ -719,6 +719,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             'PRETRADE': 'PRETRADE',
             'TRADE': 'TRADE',
         }
+        self.hideout_state = []
         self.trade_timer_limit = 150
         self.stash_items_position = {
             'bestiary': [85, 210],
@@ -1288,7 +1289,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 pass
 
     def manage_trade(self, give_items, trade_user):
-        """TODO: Bug sometimes given items calculates incorrectly"""
+        """TODO: Bug sometimes given items calculates incorrectly after trade accepted"""
         given_items = list()
         for pt in give_items:
             item = self.check_item(
@@ -1329,6 +1330,27 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 print('- User items:', len(trade_user_items), trade_user[7])
                 if len(trade_user_items) >= trade_user[7]:
                     self.check_trade_opened(accept=True)
+
+    def manage_hideout_state(self):
+        prev_state = []
+        while True:
+            if self.check_hideout():
+                log_result = self.log_manage(time_limit=5)
+                if self.hideout_state != prev_state:
+                    print('- Hideout State:', self.hideout_state)
+                    prev_state = self.hideout_state
+                for log in log_result:
+                    log_type = log[0]
+                    trade_user_name = log[1]
+                    if log_type == 'joined':
+                        if trade_user_name not in self.hideout_state:
+                            print('- Joined:', trade_user_name)
+                            self.hideout_state.append(trade_user_name)
+                    elif log_type == 'left':
+                        if trade_user_name in self.hideout_state:
+                            print('- Left:', trade_user_name)
+                            self.hideout_state.remove(trade_user_name)
+            time.sleep(0.5)
 
     def run_seller(self):
         """
@@ -1395,10 +1417,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                     if log[1][0] == 'buy':
                         char_name, buy_item, datetime = log
                         print(log)
-                    elif log[0] == 'joined':
-                        print(log)
-                    elif log[0] == 'left':
-                        print(log)
             elif self.STATE == 'PRETRADE':
                 pass
             time.sleep(1)
@@ -1434,6 +1452,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             if not self.STATE:
                 current_trade_user = None
                 current_currency = None
+                prepare_currency_attempt = 0
                 trade_opened = False
                 trade_attempt = 0
                 trade_started_at = None
@@ -1567,11 +1586,13 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                         timer = self.trade_timer_limit
 
                 if not current_currency:
-                    """
-                    BUG: if disconnected while teleporting - endless loop
-                    """
                     current_currency = self.prepare_currency(
                         current_trade_user)
+                    if not current_currency:
+                        prepare_currency_attempt += 1
+                        if prepare_currency_attempt >= 10:
+                            print('- prepare_currency reached limit:', prepare_currency_attempt)
+                            self.set_state(None)
                     continue
 
                 log_result = self.log_manage(time_limit=5)

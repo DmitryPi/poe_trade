@@ -146,9 +146,9 @@ if __name__ == '__main__':
         whisper_queue_thread = Thread(target=key_presser.manage_trade_whisper_queue, daemon=True).start()
         key_presser.run()
     elif 'seller' in sys.argv:
-        trade_seller_thread = Thread(target=key_presser.run_seller)
-        trade_seller_thread.daemon = True
-        trade_seller_thread.start()
+        trade_seller_thread = Thread(target=key_presser.run_seller, daemon=True).start()
+        hideout_state_thread = Thread(
+            target=key_presser.manage_hideout_state, daemon=True).start()
         key_presser.run()
     elif 'ahp' in sys.argv:
         auto_flask = AutoFlask()
