@@ -1364,10 +1364,11 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
 
     def run_seller(self):
         trade_users = []
+        trade_users_done = []
         trade_summary = self.load_json_file(self.trade_summary_path)
         while True:
             if not self.STATE:
-                self.set_state('START')
+                self.set_state('HIDEOUT')
                 continue
             elif self.STATE == 'START':
                 """Checks trade_summary and set prices"""
@@ -1392,16 +1393,43 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 continue
             elif self.STATE == 'HIDEOUT':
                 """Check log - invite user"""
-                if self.hideout_state and trade_users:
+                # if self.hideout_state and trade_users:
+                if trade_users:
                     self.set_state('PRETRADE')
                     continue
-                log_result = self.log_manage(time_limit=240)
+                log_result = self.log_manage(time_limit=30)
                 for log in log_result:
-                    if log[1][0] == 'buy':
-                        char_name, buy_item, datetime = log
-                        print(log)
+                    if log[1][0] != 'buy':
+                        continue
+                    char_name, buy_item, datetime = log
+                    user_buy_price = round(buy_item[4] / buy_item[2])
+                    for summary in trade_summary:
+                        if summary['item_id'] != buy_item[1]:  # compare id
+                            continue
+                        if char_name in trade_users_done:
+                            continue
+                        if user_buy_price < eval(str(summary['item_sell_price'])):
+                            print('- User changed sell price')
+                            trade_users_done.append(char_name)
+                            continue
+                        # Sold / Invite logic
+                        if summary['item_amount'] < buy_item[2]:  # item sold
+                            # send sold msg, save trade_user_done
+                            time.sleep(0.5)
+                            self.action_command_chat(f'@{char_name} sold')
+                            trade_users_done.append(char_name)
+                        elif summary['item_amount'] >= buy_item[2]:  # item available
+                            # send party invite, save trade_user
+                            check_user_in = [i for i in trade_users if i[0] == char_name]
+                            if check_user_in:  # if user in trade_users - skip
+                                """TODO: check if user updated item_amount"""
+                                continue
+                            time.sleep(0.5)
+                            print('- Invited ', char_name)
+                            self.action_command_chat(self.cmd_invite + char_name)
+                            trade_users.append(log)
             elif self.STATE == 'PRETRADE':
-                pass
+                exalt_price = self.prices[0]['item_id']
             time.sleep(1)
 
     def run_buyer(self):
