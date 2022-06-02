@@ -1435,7 +1435,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             if not self.STATE:
                 current_trade_user = None
                 current_currency = None
-                prepare_currency_attempt = 0
                 trade_opened = False
                 trade_attempt = 0
                 trade_started_at = None
@@ -1571,11 +1570,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 if not current_currency:
                     current_currency = self.prepare_currency(
                         current_trade_user)
-                    if not current_currency:
-                        prepare_currency_attempt += 1
-                        if prepare_currency_attempt >= 10:
-                            print('- prepare_currency reached limit:', prepare_currency_attempt)
-                            self.set_state(None)
                     continue
 
                 log_result = self.log_manage(time_limit=5)
