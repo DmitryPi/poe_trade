@@ -914,6 +914,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 'rusted-blight-scarab': 0.66,
                 'gilded-blight-scarab': 0.75,
                 'gilded-bestiary-scarab': 0.81,
+                'rusted-divination-scarab': 0.7,
                 'polished-divination-scarab': 0.81,
                 'gilded-divination-scarab': 0.81,
                 'rusted-expedition-scarab': 0.7,
@@ -1393,8 +1394,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 continue
             elif self.STATE == 'HIDEOUT':
                 """Check log - invite user"""
-                # if self.hideout_state and trade_users:
-                if trade_users:
+                if self.hideout_state and trade_users:
                     self.set_state('PRETRADE')
                     continue
                 log_result = self.log_manage(time_limit=30)
