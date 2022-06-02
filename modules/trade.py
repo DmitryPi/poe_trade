@@ -1367,23 +1367,27 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
         trade_summary = self.load_json_file(self.trade_summary_path)
         while True:
             if not self.STATE:
-                self.set_state('HIDEOUT')
+                self.set_state('START')
                 continue
             elif self.STATE == 'START':
                 """Checks trade_summary and set prices"""
+                self.app_window_focus()
+                # Open stash
+                while not self.check_stash_opened():
+                    self.check_open_stash()
+                    time.sleep(1)
+                # Set stash prices
                 for summary in trade_summary:
-                    """Set stash price with trade_summary data"""
                     if not summary['item_sell_price'] and summary['item_amount'] >= 50:
                         if 'scarab' not in summary['item_id']:
+                            # TODO: remove later when more item_ids
                             continue
-                        while not self.check_stash_opened():
-                            self.check_open_stash()
-                            time.sleep(1)
+                        # item_price in proportion
                         item_price = str(round((summary['item_buy_price'] + 1.5) * 10)) + '/10'
                         self.stash_set_item_price(summary['item_id'], item_price)
                         summary['item_sell_price'] = item_price
-                        self.update_json_file(trade_summary, self.trade_summary_path)
-                        trade_summary = self.load_json_file(self.trade_summary_path)
+                self.update_json_file(trade_summary, self.trade_summary_path)
+                trade_summary = self.load_json_file(self.trade_summary_path)
                 self.set_state('HIDEOUT')
                 continue
             elif self.STATE == 'HIDEOUT':
@@ -1391,7 +1395,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 if self.hideout_state and trade_users:
                     self.set_state('PRETRADE')
                     continue
-                # self.check_remove_alerts()
                 log_result = self.log_manage(time_limit=240)
                 for log in log_result:
                     if log[1][0] == 'buy':
