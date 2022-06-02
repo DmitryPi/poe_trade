@@ -149,6 +149,7 @@ if __name__ == '__main__':
         trade_seller_thread = Thread(target=key_presser.run_seller, daemon=True).start()
         hideout_state_thread = Thread(
             target=key_presser.manage_hideout_state, daemon=True).start()
+        prices_thread = Thread(target=key_presser.manage_prices, daemon=True).start()
         key_presser.run()
     elif 'ahp' in sys.argv:
         auto_flask = AutoFlask()

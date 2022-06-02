@@ -712,6 +712,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
         Trader.__init__(self)
         KeyActions.__init__(self)
         OCRChecker.__init__(self)
+        self.prices = []
         self.STATE = None
         self.STATES = {
             'START': 'START',
@@ -1351,6 +1352,15 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             print('- Left:', trade_user_name)
                             self.hideout_state.remove(trade_user_name)
             time.sleep(0.5)
+
+    def manage_prices(self):
+        while True:
+            self.prices.clear()
+            exalt_price = self.get_ninja_exalt_price()
+            if exalt_price:
+                self.prices.append({'item_id': 'exalted-orb', 'chaos_value': exalt_price})
+            print('- Prices:', self.prices)
+            time.sleep(60)
 
     def run_seller(self):
         """
