@@ -1363,44 +1363,14 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             time.sleep(60)
 
     def run_seller(self):
-        """
-            Separate thread
-                Request poe.ninja - get exalt-chao ratio
-                    new db table?
-                    update item_liquidity
-                           item_ninja_sell_price
-
-            Separate thread for hideout state
-                Deduct users that are in hideout
-
-            Get summary_items
-                if summary_item_amount > 100 and not summary_item_sell_price:
-                    Request api - build_cleaned data - check for bulk sellers
-                        update summary_item_sell_price
-                    set_price
-
-            ClientLog check for buy messages
-                if not invite limit
-                    Invite user
-                        Append user to current_trade_users
-
-            Check current_trade_users and hideout_state
-                Prepare items
-        """
-        hideout_state = []
         trade_users = []
         trade_summary = self.load_json_file(self.trade_summary_path)
-        test_users = [('potatogamer', ('buy', 'rusted-expedition-scarab', 20, 'chaos-orb', 78), ('2022/05/31', '11:36:20'))]
-        test_joined = [('joined', 'potatogamer', ('2022/05/31', '11:36:36'))]
-        test_left = [('left', 'potatogamer', ('2022/05/31', '11:36:48'))]
         while True:
             if not self.STATE:
-                hideout_state = []
-                trade_users = []
                 self.set_state('HIDEOUT')
                 continue
             elif self.STATE == 'START':
-                """Checks trade_summary and sets prices"""
+                """Checks trade_summary and set prices"""
                 for summary in trade_summary:
                     """Set stash price with trade_summary data"""
                     if not summary['item_sell_price'] and summary['item_amount'] >= 50:
@@ -1410,17 +1380,17 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             self.check_open_stash()
                             time.sleep(1)
                         item_price = str(round((summary['item_buy_price'] + 1.5) * 10)) + '/10'
-                        self.stash_set_item_price(summary['item_id'], item_price)  # fix polished_ambush
+                        self.stash_set_item_price(summary['item_id'], item_price)
                         summary['item_sell_price'] = item_price
                         self.update_json_file(trade_summary, self.trade_summary_path)
                         trade_summary = self.load_json_file(self.trade_summary_path)
                 self.set_state('HIDEOUT')
                 continue
             elif self.STATE == 'HIDEOUT':
-                if hideout_state and trade_users:
+                """Check log - invite user"""
+                if self.hideout_state and trade_users:
                     self.set_state('PRETRADE')
                     continue
-                """Check log - invite user - prepare item"""
                 # self.check_remove_alerts()
                 log_result = self.log_manage(time_limit=240)
                 for log in log_result:
