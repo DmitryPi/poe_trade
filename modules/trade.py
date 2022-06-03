@@ -823,6 +823,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
     def stash_take_item(self, item_id: str, amount=0) -> None:
         print('- Taking item {} - {}'.format(item_id, amount))
         if 'scarab' in item_id:
+            self.stash_activate_tab('fragment', subtab='scarab')
             amount = math.ceil(amount / 10)  # calc amount of clicks ;+1 for safety
             scarab_pos = self.stash_get_scarab_position(item_id)
             self.mouse_move(*scarab_pos)
@@ -1365,11 +1366,16 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
 
     def run_seller(self):
         trade_users = []
+        current_trade_user = None
         trade_users_done = []
         trade_summary = self.load_json_file(self.trade_summary_path)
         while True:
             if not self.STATE:
-                self.set_state('HIDEOUT')
+                trade_users.clear()
+                trade_users_done.clear()
+                current_trade_user = None
+                inventory_items = []
+                self.set_state('PRETRADE')
                 continue
             elif self.STATE == 'START':
                 """Checks trade_summary and set prices"""
@@ -1394,6 +1400,8 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 continue
             elif self.STATE == 'HIDEOUT':
                 """Check log - invite user"""
+                """TODO: trade_user/_done timely clear
+                         clean inventory"""
                 if self.hideout_state and trade_users:
                     self.set_state('PRETRADE')
                     continue
@@ -1406,15 +1414,17 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                     for summary in trade_summary:
                         if summary['item_id'] != buy_item[1]:  # compare id
                             continue
-                        if char_name in trade_users_done:
-                            continue
                         if user_buy_price < eval(str(summary['item_sell_price'])):
+                            if char_name in trade_users_done:
+                                continue
                             print('- User changed sell price')
                             trade_users_done.append(char_name)
                             continue
                         # Sold / Invite logic
                         if summary['item_amount'] < buy_item[2]:  # item sold
                             # send sold msg, save trade_user_done
+                            if char_name in trade_users_done:
+                                continue
                             time.sleep(0.5)
                             self.action_command_chat(f'@{char_name} sold')
                             trade_users_done.append(char_name)
@@ -1429,7 +1439,30 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             self.action_command_chat(self.cmd_invite + char_name)
                             trade_users.append(log)
             elif self.STATE == 'PRETRADE':
-                exalt_price = self.prices[0]['item_id']
+                current_trade_user = [i for i in trade_users if i[0] in self.hideout_state]
+                if not current_trade_user:
+                    print('- Unknown current_trade_user:', self.hideout_state, trade_users)
+                    self.set_state('HIDEOUT')
+                current_trade_user = current_trade_user[0]
+                item_id = current_trade_user[1][1]
+                item_amount = current_trade_user[1][2]
+                # Open stash
+                while not self.check_stash_opened():
+                    self.check_open_stash()
+                    time.sleep(1)
+                # Take trade items from stash / confirm result
+                inventory_items = self.check_item(item_id, amount=item_amount, inventory=True)
+                if inventory_items:
+                    """TODO: fix bug with check_item-double-check items
+                        Double check finds any 10 stack """
+                    self.set_state('TRADE')
+                    continue
+                else:
+                    self.stash_take_item(item_id, item_amount)
+            elif self.STATE == 'TRADE':
+                # exalt_price = self.prices[0]['item_id']
+                exalt_price = 174
+                print(current_trade_user, inventory_items)
             time.sleep(1)
 
     def run_buyer(self):
