@@ -1347,8 +1347,8 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             if not self.check_trade_opened():
                 return None
             for pt in give_items:
-                self.mouse_move_click(
-                    pt[0], pt[1], ctrl=True, delay=True)
+                self.mouse_move(pt[0], pt[1])
+                self.mouse_move_click(ctrl=True)
             self.mouse_move(1350, 500)
         elif given_items_len == give_items_len:
             """TODO: check chaos/exalts amount"""
