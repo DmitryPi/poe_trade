@@ -639,7 +639,12 @@ class Trader(TradeDB, Base):
                 print(f'\n- Switched to {trade_item["item_id"]}')
 
                 """Check if trade_item buy_limit reached"""
-                trade_summary = self.load_json_file(self.trade_summary_path)
+                try:
+                    trade_summary = self.load_json_file(self.trade_summary_path)
+                except Exception as e:
+                    print('- Error:', repr(e))
+                    trade_summary = []
+
                 if trade_summary:
                     buy_limit = False
                     for summary in trade_summary:
