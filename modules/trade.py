@@ -884,7 +884,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 7: 0.9,
                 8: 0.89,
                 9: 0.9,
-                10: 0.9,
+                10: 0.88,
             }
             template = f'assets/items/c_chaos_{amount}_{amount}.png'
             threshold = threshold[amount]
@@ -1342,8 +1342,8 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 given_items.append(item)
         given_items_len = len(given_items)
         give_items_len = len(give_items)
-        print('- Given Items:', given_items_len, give_items_len)
         if given_items_len < give_items_len:
+            print('- Given Items:', given_items_len, give_items_len)
             if not self.check_trade_opened():
                 return None
             for pt in give_items:
@@ -1351,14 +1351,18 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                     pt[0], pt[1], ctrl=True, delay=True)
             self.mouse_move(1350, 500)
         elif given_items_len == give_items_len:
+            """TODO: check chaos/exalts amount"""
+            currency = trade_user[1][3]
+            currency_amount = 10 if trade_user[1][4] > 10 else trade_user[1][4]
             trade_user_items = self.check_item(
-                trade_user[1][3],  # chaos-orb
-                amount=trade_user[1][4],
+                currency,  # chaos-orb
+                amount=currency_amount,
                 trade=True)
+            item_sum = sum([i[2] for i in trade_user_items])
             if trade_user_items:
-                result = self.trade_confirm_items(trade_user_items)
-                print('- User items:', len(trade_user_items), result)
-                if len(result) >= len(trade_user_items):
+                print('- Item sum:', item_sum)
+                self.action_confirm_items()
+                if item_sum >= currency_amount:
                     self.check_trade_opened(accept=True)
 
     def manage_hideout_state(self):
@@ -1410,10 +1414,14 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 """Checks trade_summary and set prices"""
                 print('- Done users:', trade_users_done)
                 self.app_window_focus()
+
                 # Open stash
                 while not self.check_stash_opened():
                     self.check_open_stash()
                     time.sleep(1)
+                # remove alerts + clean inventory
+                self.check_remove_alerts()
+                self.action_paste_inventory_all()
                 # Set stash prices
                 for summary in trade_summary:
                     if not summary['item_sell_price'] and summary['item_amount'] >= 50:
@@ -1433,10 +1441,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 """TODO: trade_user/_done timely clear
                          clean inventory
                          add invite_limit"""
-                # remove alerts + clean inventory
-                self.check_remove_alerts()
-                self.action_paste_inventory_all()
-
                 if self.hideout_state and trade_users:
                     self.set_state('PRETRADE')
                     continue
@@ -1497,13 +1501,17 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 else:
                     self.stash_take_item(item_id, item_amount)
             elif self.STATE == 'TRADE':
+                # current_trade_user = ('rompatel_sentinel', ('buy', 'rusted-divination-scarab', 10, 'chaos-orb', 29), ('2022/06/04', '11:12:18'))
+                # inventory_items = [(1290, 613, 10), (1345, 613, 10), (1400, 613, 10)]
                 self.action_command_chat(self.cmd_tradewith + ' ' + current_trade_user[0])
                 while self.check_trade_opened():
-                    if trade_attempt >= 40:
+                    if trade_attempt >= 20:
                         print('- Trade attempt limit reached')
+                        pyautogui.press('esc')
+                        self.set_state('HIDEOUT')
                         break
-                    trade_opened = True
                     self.manage_trade_sell(inventory_items, current_trade_user)
+                    trade_opened = True
                     trade_attempt += 1
 
                 if trade_opened:
@@ -1512,6 +1520,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                         if 'accepted' in res:
                             print('- Trade success')
                             trade_opened = False
+                            trade_attempt = 0
                             trade_users.remove(current_trade_user)
                             trade_users_done.append(current_trade_user[0])
                             """update trade summary decrement
@@ -1523,7 +1532,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             continue
                         elif 'cancelled' in res:
                             trade_opened = False
-            time.sleep(1)
+            time.sleep(self.main_loop_delay)
 
     def run_buyer(self):
         db_conn = self.db_create_connection()
