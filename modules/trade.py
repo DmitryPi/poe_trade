@@ -1342,8 +1342,8 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 given_items.append(item)
         given_items_len = len(given_items)
         give_items_len = len(give_items)
+        print('- Given Items:', given_items_len, give_items_len)
         if given_items_len < give_items_len:
-            print('- Given Items:', given_items_len, give_items_len)
             if not self.check_trade_opened():
                 return None
             for pt in give_items:
@@ -1486,6 +1486,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 current_trade_user = current_trade_user[0]
                 item_id = current_trade_user[1][1]
                 item_amount = current_trade_user[1][2]
+                print('- Current user:', current_trade_user)
                 # Open stash
                 while not self.check_stash_opened():
                     self.check_open_stash()
