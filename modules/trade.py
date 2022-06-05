@@ -642,7 +642,7 @@ class Trader(TradeDB, Base):
                 try:
                     trade_summary = self.load_json_file(self.trade_summary_path)
                 except Exception as e:
-                    print('- Error:', repr(e))
+                    print('- Error:', e)
                     trade_summary = []
 
                 if trade_summary:
@@ -1340,6 +1340,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                     self.check_trade_opened(accept=True)
 
     def manage_trade_sell(self, give_items, trade_user):
+        """TODO: debug"""
         given_items = []
         for pt in give_items:
             item = self.check_item(trade_user[1][1], amount=pt[2], trade=True)
@@ -1349,8 +1350,8 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
         give_items_len = len(give_items)
         print('- Given Items:', given_items_len, give_items_len)
         if given_items_len < give_items_len:
-            if not self.check_trade_opened():
-                return None
+            if not self.check_trade_opened(accept=False):
+                return
             for pt in give_items:
                 self.mouse_move(pt[0], pt[1])
                 self.mouse_move_click(ctrl=True)
