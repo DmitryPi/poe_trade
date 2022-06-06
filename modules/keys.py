@@ -92,7 +92,7 @@ class KeyActions(Base):
     def action_confirm_items(self, threshold=0.55):
         items = [
             'c_chaos_cut', 'scarab-polished-half-top',
-            'card_half', 'bound-fossil-half', 'exalt_half', 'corroded-fossil', 'perfect-fossil'
+            'card_half', 'bound-fossil-half', 'exalt-half', 'corroded-fossil', 'perfect-fossil'
         ]
         pyautogui.PAUSE = 0.01
         crop = [290, 140, 955, 480]

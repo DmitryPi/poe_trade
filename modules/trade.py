@@ -878,7 +878,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
         else:
             crop = []
 
-        if item_name == 'chaos' or item_name == 'chaos-orb':
+        if 'chaos' in item_name:
             threshold = {
                 1: 0.9,
                 2: 0.9,
@@ -893,6 +893,9 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             }
             template = f'assets/items/c_chaos_{amount}_{amount}.png'
             threshold = threshold[amount]
+        elif 'exalt' in item_name:
+            template = f'assets/items/exalt-half.png'
+            threshold = 0.85
         elif item_name == 'card':
             template = 'assets/items/card_half.png'
             threshold = 0.8
@@ -949,6 +952,8 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             multiple = True if len(detected_objects) >= 2 else False
             detected_objects = self.double_check_item(
                 detected_objects, item_name, amount=amount, crop=crop, multiple=multiple)
+            if 'exalt' in item_name:  # exalt check returns int
+                return detected_objects
         filtered_objects = list()
         for pt in detected_objects:
             filtered_objects.append((pt[0], pt[1], amount))
@@ -956,7 +961,28 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
 
     def double_check_item(self, items, item_name, amount=0, crop=[], multiple=False):
         detected_objects = []
-        if 'fossil' in item_name:
+        if 'exalt' in item_name:
+            template = 'assets/items/exalt-{}.png'
+            threshold = {
+                1: 0.9,
+                2: 0.9,
+                3: 0.9,
+                4: 0.9,
+                5: 0.9,
+            }
+            item_sum = 0
+            for item in items:
+                # crop item upper half number for checking
+                crop = [item[0] - 30, item[1] - 35, item[0] + 25, item[1]]
+                for i in threshold:
+                    detected_objects = self.cv_detect_boilerplate(
+                        template.format(i), threshold=threshold[i],
+                        lst=True, crop=crop)[0]
+                    if detected_objects:
+                        item_sum += i
+                        break
+            return item_sum
+        elif 'fossil' in item_name:
             template = f'assets/items/fossil-{amount}.png'
             threshold = {
                 1: 0.86,
@@ -1298,12 +1324,12 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
 
     def manage_trade(self, give_items, trade_user):
         """TODO: Bug sometimes given items calculates incorrectly after trade accepted"""
+        give_items_amount = list(dict.fromkeys([pt[2] for pt in give_items]))
         given_items = []
-        for pt in give_items:
-            item = self.check_item(
-                trade_user[-4], amount=pt[2], trade=True)
-            if item:
-                given_items.append(item)
+        for item_amount in give_items_amount:
+            det_objects = self.check_item(trade_user[-4], amount=item_amount, trade=True)
+            if det_objects:
+                [given_items.append(i) for i in det_objects]
         given_items_len = len(given_items)
         give_items_len = len(give_items)
         print('- Given Items:', given_items_len, give_items_len)
@@ -1311,9 +1337,9 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             if not self.check_trade_opened():
                 return None
             pyautogui.click(button='right', interval=0.1)  # why?
-            for pt in give_items:
-                self.mouse_move_click(
-                    pt[0], pt[1], ctrl=True, delay=True)
+            for item_coords in give_items:
+                self.mouse_move(*item_coords)
+                self.mouse_move_click(ctrl=True)
             self.mouse_move(1350, 500)
         elif given_items_len == give_items_len:
             trade_item = trade_user[3] if trade_user[3] == 'card' else trade_user[4]
@@ -1340,35 +1366,43 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                     self.check_trade_opened(accept=True)
 
     def manage_trade_sell(self, give_items, trade_user):
-        """TODO: debug"""
+        give_items_amount = list(dict.fromkeys([pt[2] for pt in give_items]))
         given_items = []
-        for pt in give_items:
-            item = self.check_item(trade_user[1][1], amount=pt[2], trade=True)
-            if item:
-                given_items.append(item)
+        for item_amount in give_items_amount:  # unique item_amounts
+            det_objects = self.check_item(trade_user[1][1], amount=item_amount, trade=True)
+            if det_objects:
+                [given_items.append(i) for i in det_objects]
+                print(given_items)
         given_items_len = len(given_items)
         give_items_len = len(give_items)
         print('- Given Items:', given_items_len, give_items_len)
-        if given_items_len < give_items_len:
-            if not self.check_trade_opened(accept=False):
+        if given_items_len < give_items_len:  # check my items
+            if not self.check_trade_opened():
                 return
-            for pt in give_items:
-                self.mouse_move(pt[0], pt[1])
+            for item_coords in give_items:
+                self.mouse_move(*item_coords)
                 self.mouse_move_click(ctrl=True)
-            self.mouse_move(1350, 500)
-        elif given_items_len == give_items_len:
+            self.mouse_move(1350, 500)  # inventory to the left of flasks
+        elif given_items_len == give_items_len:  # check trade_user items
             """TODO: check chaos/exalts amount"""
+            self.action_confirm_items()  # confirm items before checking
+            self.mouse_move(605, 485)  # middle of the trade window
+
+            exalt_price = self.prices[0]['chaos_value']
             currency = trade_user[1][3]
             currency_amount = 10 if trade_user[1][4] > 10 else trade_user[1][4]
             trade_user_items = self.check_item(
                 currency,  # chaos-orb
                 amount=currency_amount,
                 trade=True)
+            exalt_sum = self.check_item('exalted-orb', trade=True)
             item_sum = sum([i[2] for i in trade_user_items])
+            print('- Exalt Sum:', exalt_sum)
+            print('- Item Sum:', item_sum)
+            # print(trade_user[1][4], item_sum)
             if trade_user_items:
                 print('- Item sum:', item_sum)
-                self.action_confirm_items()
-                if item_sum >= currency_amount:
+                if item_sum >= trade_user[1][4]:
                     self.check_trade_opened(accept=True)
 
     def manage_hideout_state(self):
@@ -1411,10 +1445,10 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 trade_users.clear()
                 trade_users_done.clear()
                 trade_opened = False
-                trade_attempt = 0
+                trade_timer = 0
                 current_trade_user = None
                 inventory_items = []
-                self.set_state('START')
+                self.set_state('TRADE')
                 continue
             elif self.STATE == 'START':
                 """Checks trade_summary and set prices"""
@@ -1508,26 +1542,29 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 else:
                     self.stash_take_item(item_id, item_amount)
             elif self.STATE == 'TRADE':
-                # current_trade_user = ('rompatel_sentinel', ('buy', 'rusted-divination-scarab', 10, 'chaos-orb', 29), ('2022/06/04', '11:12:18'))
-                # inventory_items = [(1290, 613, 10), (1345, 613, 10), (1400, 613, 10)]
+                current_trade_user = ('rompatel_sentinel', ('buy', 'rusted-divination-scarab', 30, 'chaos-orb', 35), ('2022/06/04', '11:12:18'))
+                inventory_items = [(1290, 613, 10), (1345, 613, 10), (1400, 613, 10)]
+                # inventory_items = [(1290, 613, 10)]
+                # trade with current_trade_user
                 self.action_command_chat(self.cmd_tradewith + ' ' + current_trade_user[0])
+                # trade operation
                 while self.check_trade_opened():
-                    if trade_attempt >= 20:
+                    if trade_timer >= 20:
                         print('- Trade attempt limit reached')
                         pyautogui.press('esc')
                         self.set_state('HIDEOUT')
                         break
                     self.manage_trade_sell(inventory_items, current_trade_user)
                     trade_opened = True
-                    trade_attempt += 1
-
+                    trade_timer += 1
+                # trade closed
                 if trade_opened:
                     log_result = self.log_manage(time_limit=5)
                     for res in log_result:
                         if 'accepted' in res:
                             print('- Trade success')
                             trade_opened = False
-                            trade_attempt = 0
+                            trade_timer = 0
                             trade_users.remove(current_trade_user)
                             trade_users_done.append(current_trade_user[0])
                             """update trade summary decrement
@@ -1538,6 +1575,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                                 self.set_state(None)
                             continue
                         elif 'cancelled' in res:
+                            print('- Trade cancelled')
                             trade_opened = False
             time.sleep(self.main_loop_delay)
 
