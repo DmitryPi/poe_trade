@@ -2,6 +2,8 @@ import sys
 from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtWidgets import (
     QApplication,
+    QAction,
+    qApp,
     QMainWindow,
     QPushButton,
     QToolTip,
@@ -25,12 +27,26 @@ class MainApp(QMainWindow):
         self.setWindowTitle(self.app_title)
         self.setWindowIcon(QIcon(self.app_icon))
         self.setGeometry(900, 350, 551, 500)  # location x,y and size x,y
-        # ui elements
+        # ui
         self.ui_quit_btn()
+        # toolbar
+        self.set_toolbar()
         # status
         self.set_statusbar()
         # show
         self.show()
+
+    def set_toolbar(self) -> None:
+        exitAction = QAction(QIcon('assets/gui/exit.png'), 'Exit', self)
+        exitAction.setShortcut('HOME')
+        exitAction.setStatusTip('Exit application')
+        exitAction.triggered.connect(qApp.quit)
+
+        self.toolbar = self.addToolBar('')
+        self.toolbar.addAction(exitAction)
+
+    def set_statusbar(self, msg='Ready') -> None:
+        self.statusBar().showMessage(msg)
 
     def ui_quit_btn(self) -> None:
         btn = QPushButton('Quit', self)
@@ -38,9 +54,6 @@ class MainApp(QMainWindow):
         btn.move(50, 50)
         btn.resize(btn.sizeHint())
         btn.clicked.connect(QCoreApplication.instance().quit)
-
-    def set_statusbar(self, msg='Ready') -> None:
-        self.statusBar().showMessage(msg)
 
 
 if __name__ == '__main__':
