@@ -116,7 +116,6 @@ class Ui_MainWindow(PyQTUtility):
         self.comboBox.addItem("")
         self.horizontalLayout_2.addWidget(self.comboBox)
 
-
     def input_state(self, input):
         print(input)
 
