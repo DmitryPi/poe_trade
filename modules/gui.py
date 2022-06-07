@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import (
     QApplication,
     QAction,
     qApp,
+    QDesktopWidget,
     QMainWindow,
     QPushButton,
     QToolTip,
@@ -23,10 +24,8 @@ class MainApp(QMainWindow):
 
     def init_ui(self) -> None:
         QToolTip.setFont(QFont('Roboto', 10))
-        # window params
-        self.setWindowTitle(self.app_title)
-        self.setWindowIcon(QIcon(self.app_icon))
-        self.setGeometry(900, 350, 551, 500)  # location x,y and size x,y
+        # window
+        self.set_window()
         # ui
         self.ui_quit_btn()
         # toolbar
@@ -35,6 +34,17 @@ class MainApp(QMainWindow):
         self.set_statusbar()
         # show
         self.show()
+
+    def set_window(self, size=[550, 500]) -> None:
+        """Set window default title/icon/size/position"""
+        self.setWindowTitle(self.app_title)
+        self.setWindowIcon(QIcon(self.app_icon))
+        # position/size
+        self.resize(*size)
+        window_rect = self.frameGeometry()  # app window rect
+        window_coords = QDesktopWidget().availableGeometry().center()  # screen center x,y
+        window_rect.moveCenter(window_coords)
+        self.move(window_rect.topLeft())  # move app rect to screen center
 
     def set_toolbar(self) -> None:
         exitAction = QAction(QIcon('assets/gui/exit.png'), 'Exit', self)
