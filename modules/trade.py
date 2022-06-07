@@ -969,6 +969,11 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 3: 0.9,
                 4: 0.9,
                 5: 0.9,
+                6: 0.9,
+                7: 0.9,
+                8: 0.9,
+                9: 0.9,
+                10: 0.9,
             }
             item_sum = 0
             for item in items:
