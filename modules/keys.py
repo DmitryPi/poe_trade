@@ -89,12 +89,12 @@ class KeyActions(Base):
             template, threshold=threshold, calc_mp=True)[0]
         self.action_inventory_move_click(detected_objects)
 
-    def action_confirm_items(self, threshold=0.55):
+    def action_confirm_items(self, threshold=0.7, delay=0.01):
         items = [
             'c_chaos_cut', 'scarab-polished-half-top',
             'card_half', 'bound-fossil-half', 'exalt-half', 'corroded-fossil', 'perfect-fossil'
         ]
-        pyautogui.PAUSE = 0.01
+        pyautogui.PAUSE = delay
         crop = [290, 140, 955, 480]
         detected_objects = []
         for item in items:

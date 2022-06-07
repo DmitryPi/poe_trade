@@ -1323,7 +1323,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 pass
 
     def manage_trade(self, give_items, trade_user):
-        """TODO: Bug sometimes given items calculates incorrectly after trade accepted"""
+        """TODO: Merge manage_trade_sell"""
         give_items_amount = list(dict.fromkeys([pt[2] for pt in give_items]))
         given_items = []
         for item_amount in give_items_amount:
@@ -1372,7 +1372,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             det_objects = self.check_item(trade_user[1][1], amount=item_amount, trade=True)
             if det_objects:
                 [given_items.append(i) for i in det_objects]
-                print(given_items)
         given_items_len = len(given_items)
         give_items_len = len(give_items)
         print('- Given Items:', given_items_len, give_items_len)
@@ -1384,24 +1383,31 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 self.mouse_move_click(ctrl=True)
             self.mouse_move(1350, 500)  # inventory to the left of flasks
         elif given_items_len == give_items_len:  # check trade_user items
-            """TODO: check chaos/exalts amount"""
             self.action_confirm_items()  # confirm items before checking
             self.mouse_move(605, 485)  # middle of the trade window
 
             exalt_price = self.prices[0]['chaos_value']
-            currency = trade_user[1][3]
-            currency_amount = 10 if trade_user[1][4] > 10 else trade_user[1][4]
-            trade_user_items = self.check_item(
-                currency,  # chaos-orb
-                amount=currency_amount,
+            take_currency_type = trade_user[1][3]
+            take_currency_amount = 10 if trade_user[1][4] > 10 else trade_user[1][4]
+            take_currency_amount_rem = trade_user[1][4] % 10
+            take_items = self.check_item(
+                take_currency_type,  # chaos-orb
+                amount=take_currency_amount,
                 trade=True)
+            if take_currency_amount_rem:
+                remainders = self.check_item(
+                    take_currency_type,  # chaos-orb
+                    amount=take_currency_amount_rem,
+                    trade=True)
+                [take_items.append(i) for i in remainders]
+            # find / calculate exalt sum
             exalt_sum = self.check_item('exalted-orb', trade=True)
-            item_sum = sum([i[2] for i in trade_user_items])
-            print('- Exalt Sum:', exalt_sum)
-            print('- Item Sum:', item_sum)
-            # print(trade_user[1][4], item_sum)
-            if trade_user_items:
-                print('- Item sum:', item_sum)
+            exalt_sum = round(exalt_sum * exalt_price) if exalt_sum else 0
+            # calculate user given currency amount
+            item_sum = sum([i[2] for i in take_items]) + exalt_sum
+            # check if sum is appropriate - accept trade
+            if take_items or exalt_sum:
+                print('- Item Sum:', item_sum, '- Exalt Sum:', exalt_sum)
                 if item_sum >= trade_user[1][4]:
                     self.check_trade_opened(accept=True)
 
@@ -1542,8 +1548,8 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 else:
                     self.stash_take_item(item_id, item_amount)
             elif self.STATE == 'TRADE':
-                current_trade_user = ('rompatel_sentinel', ('buy', 'rusted-divination-scarab', 30, 'chaos-orb', 35), ('2022/06/04', '11:12:18'))
-                inventory_items = [(1290, 613, 10), (1345, 613, 10), (1400, 613, 10)]
+                # current_trade_user = ('rompatel_sentinel', ('buy', 'rusted-divination-scarab', 30, 'chaos-orb', 35), ('2022/06/04', '11:12:18'))
+                # inventory_items = [(1290, 613, 10), (1345, 613, 10), (1400, 613, 10)]
                 # inventory_items = [(1290, 613, 10)]
                 # trade with current_trade_user
                 self.action_command_chat(self.cmd_tradewith + ' ' + current_trade_user[0])
