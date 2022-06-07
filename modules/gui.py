@@ -18,15 +18,12 @@ from PyQt5.QtGui import QIcon, QFont
 class MainApp(QMainWindow):
     def __init__(self):
         super().__init__()
-
         self.app_title = 'App title'
         self.app_icon = 'assets/gui/logo.png'
         self.app_window_size = [550, 500]
-
         self.init_ui()
 
     def init_ui(self) -> None:
-        QToolTip.setFont(QFont('Roboto', 10))
         # window
         self.set_window(size=self.app_window_size)
         # ui
@@ -52,7 +49,6 @@ class MainApp(QMainWindow):
         """Set window default title/icon/size/position"""
         self.setWindowTitle(self.app_title)
         self.setWindowIcon(QIcon(self.app_icon))
-        # position/size
         self.set_window_size(size=size)
         self.set_window_center()
 
