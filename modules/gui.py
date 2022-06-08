@@ -71,7 +71,7 @@ class MainApp(QMainWindow):
         # render widget
         groupbox_1 = ui_groupbox('Macros', [270, 10, 251, 291], flat=False)
         groupbox_1.setLayout(vbox)
-        groupbox_2 = ui_groupbox('Options', [0, 10, 261, 291], flat=False)
+        groupbox_2 = ui_groupbox('Global Options', [0, 10, 261, 291], flat=True)
         groupbox_2.setLayout(vbox_1)
         grid = QGridLayout()
         grid.addWidget(groupbox_1, 0, 0)

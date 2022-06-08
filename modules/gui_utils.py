@@ -19,6 +19,10 @@ def on_combo_box_choice(state: bool):
     print(state)
 
 
+def on_input_change(line_edit: object) -> None:
+    print(line_edit.text())
+
+
 def ui_quit_btn(instance: object) -> None:
     btn = QPushButton('Quit', instance)
     btn.setToolTip('This is a <b>QPushButton</b> widget')
@@ -82,7 +86,7 @@ def ui_vbox_label_input(instance: object, label: str, input_default='') -> objec
     # input field
     line_edit = QLineEdit(instance)
     line_edit.setText(str(input_default))
-    # line_edit.textChanged[str].connect(self.onChanged)
+    line_edit.textChanged[str].connect(lambda: on_input_change(line_edit))
     # horizonal box
     vbox = ui_vbox()
     vbox.addWidget(label)
