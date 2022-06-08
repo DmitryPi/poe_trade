@@ -1525,6 +1525,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             if check_user_in:  # if user in trade_users - skip
                                 """TODO: check if user updated item_amount"""
                                 continue
+                            self.app_window_focus()
                             time.sleep(0.5)
                             print('- Invited ', char_name)
                             self.action_command_chat(self.cmd_invite + char_name)
@@ -1534,6 +1535,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 if not current_trade_user:
                     print('- Unknown current_trade_user:', self.hideout_state, trade_users)
                     self.set_state('HIDEOUT')
+                    continue
                 current_trade_user = current_trade_user[0]
                 item_id = current_trade_user[1][1]
                 item_amount = current_trade_user[1][2]
@@ -1576,8 +1578,8 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             print('- Trade success')
                             trade_opened = False
                             trade_timer = 0
-                            trade_users.remove(current_trade_user)
                             trade_users_done.append(current_trade_user[0])
+                            trade_users.remove(current_trade_user)
                             """update trade summary decrement
                                kick user"""
                             if trade_users:
