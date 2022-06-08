@@ -1490,18 +1490,17 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             elif self.STATE == 'HIDEOUT':
                 """Check log - invite user"""
                 """TODO: trade_user/_done timely clear
-                         clean inventory
                          add invite_limit"""
                 if self.hideout_state and trade_users:
                     self.set_state('PRETRADE')
                     continue
 
-                log_result = self.log_manage(time_limit=20)
+                log_result = self.log_manage(time_limit=250)
                 for log in log_result:
                     if log[1][0] != 'buy':
                         continue
                     char_name, buy_item, datetime = log
-                    user_buy_price = round(buy_item[4] / buy_item[2])
+                    user_buy_price = buy_item[4] / buy_item[2]
                     for summary in trade_summary:
                         if summary['item_id'] != buy_item[1]:  # compare id
                             continue
