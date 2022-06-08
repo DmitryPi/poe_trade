@@ -1344,7 +1344,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             pyautogui.click(button='right', interval=0.1)  # why?
             for item_coords in give_items:
                 self.mouse_move(*item_coords)
-                self.mouse_move_click(ctrl=True)
+                self.mouse_move_click(ctrl=True, delay=True)
             self.mouse_move(1350, 500)
         elif given_items_len == give_items_len:
             trade_item = trade_user[3] if trade_user[3] == 'card' else trade_user[4]
@@ -1385,7 +1385,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 return
             for item_coords in give_items:
                 self.mouse_move(*item_coords)
-                self.mouse_move_click(ctrl=True)
+                self.mouse_move_click(ctrl=True, delay=True)
             self.mouse_move(1350, 500)  # inventory to the left of flasks
         elif given_items_len == give_items_len:  # check trade_user items
             self.action_confirm_items()  # confirm items before checking
@@ -1459,7 +1459,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 trade_timer = 0
                 current_trade_user = None
                 inventory_items = []
-                self.set_state('TRADE')
+                self.set_state('START')
                 continue
             elif self.STATE == 'START':
                 """Checks trade_summary and set prices"""
