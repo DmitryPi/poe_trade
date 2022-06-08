@@ -1,4 +1,5 @@
 import sys
+
 from PyQt5.QtCore import QCoreApplication, QRect
 from PyQt5.QtWidgets import (
     QApplication,
@@ -20,6 +21,8 @@ from PyQt5.QtWidgets import (
     QTextEdit,
 )
 from PyQt5.QtGui import QIcon, QFont
+
+from modules.gui_utils import ui_groupbox, ui_hbox_label_combobox_btn
 
 
 class MainApp(QMainWindow):
@@ -50,49 +53,19 @@ class MainApp(QMainWindow):
         main_widget = QWidget(self)
         self.setCentralWidget(main_widget)
         # set layout
-        hbox = self.layout_hbox_row()
+        hbox = ui_hbox_label_combobox_btn(self, 'Test', self.bind_options)
         vbox = QVBoxLayout()
         vbox.addLayout(hbox)
         vbox.addStretch(3)
 
         # render widget
-        groupbox_1 = QGroupBox('Macros')
-        groupbox_1.setGeometry(QRect(270, 10, 251, 291))
+        groupbox_1 = ui_groupbox('Macros', QRect(270, 10, 251, 291))
         groupbox_1.setLayout(vbox)
-        groupbox_1.setFlat(True)
-        groupbox_2 = QGroupBox('Options')
-        groupbox_2.setGeometry(QRect(0, 10, 261, 291))
+        groupbox_2 = ui_groupbox('Options', QRect(0, 10, 261, 291))
         grid = QGridLayout()
         grid.addWidget(groupbox_1, 0, 0)
         grid.addWidget(groupbox_2, 0, 1)
         main_widget.setLayout(grid)
-
-    def layout_hbox_row(self) -> object:
-        label = QLabel('/hideout <name>', self)
-
-        combo_box = QComboBox(self)
-        for i in self.bind_options:
-            combo_box.addItem(i)
-        combo_box.activated[str].connect(self.on_dropdown_choice)
-
-        btn = QPushButton('ON', self)
-        btn.setCheckable(True)
-        btn.toggle()
-        btn.toggled.connect(lambda: self.on_btn_toggle(btn))
-
-        hbox = QHBoxLayout()
-        hbox.addWidget(label)
-        hbox.addStretch(3)
-        hbox.addWidget(combo_box)
-        hbox.addWidget(btn)
-        return hbox
-
-    def on_btn_toggle(self, btn: object) -> None:
-        btn_text = 'OFF' if btn.text() == 'ON' else 'ON'
-        btn.setText(btn_text)
-
-    def on_dropdown_choice(self, state):
-        print(state)
 
     def set_main_styles(self) -> None:
         """Set styles for main frame/bars"""
@@ -130,13 +103,6 @@ class MainApp(QMainWindow):
 
     def set_statusbar(self, msg='Ready') -> None:
         self.statusBar().showMessage(msg)
-
-    def ui_quit_btn(self) -> None:
-        btn = QPushButton('Quit', self)
-        btn.setToolTip('This is a <b>QPushButton</b> widget')
-        btn.move(50, 50)
-        btn.resize(btn.sizeHint())
-        btn.clicked.connect(QCoreApplication.instance().quit)
 
 
 if __name__ == '__main__':
