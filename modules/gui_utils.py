@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (
     QComboBox,
     QGroupBox,
     QLabel,
+    QLineEdit,
     QPushButton,
     QVBoxLayout,
     QHBoxLayout,
@@ -35,6 +36,11 @@ def ui_groupbox(title: str, rect: list, flat=False) -> object:
     return groupbox
 
 
+def ui_hbox() -> object:
+    hbox = QHBoxLayout()
+    return hbox
+
+
 def ui_vbox(align='top') -> object:
     """Build vertical box with alignment"""
     alignments = {
@@ -62,8 +68,23 @@ def ui_hbox_label_combobox_btn(instance: object, label: str, combo_options: list
     btn.toggle()
     btn.toggled.connect(lambda: on_btn_toggle(btn))
     # horizonal box
-    hbox = QHBoxLayout()
+    hbox = ui_hbox()
     hbox.addWidget(label)
     hbox.addWidget(combo_box)
     hbox.addWidget(btn)
     return hbox
+
+
+def ui_vbox_label_input(instance: object, label: str, input_default='') -> object:
+    """Build vertical box with: label, input field(line-edit)"""
+    # label
+    label = QLabel(label, instance)
+    # input field
+    line_edit = QLineEdit(instance)
+    line_edit.setText(str(input_default))
+    # line_edit.textChanged[str].connect(self.onChanged)
+    # horizonal box
+    vbox = ui_vbox()
+    vbox.addWidget(label)
+    vbox.addWidget(line_edit)
+    return vbox

@@ -16,12 +16,16 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QGridLayout,
-    QLineEdit,
     QTextEdit,
 )
 from PyQt5.QtGui import QIcon, QFont
 
-from modules.gui_utils import ui_groupbox, ui_vbox, ui_hbox_label_combobox_btn
+from modules.gui_utils import (
+    ui_groupbox,
+    ui_vbox,
+    ui_hbox_label_combobox_btn,
+    ui_vbox_label_input,
+)
 
 
 class MainApp(QMainWindow):
@@ -52,13 +56,17 @@ class MainApp(QMainWindow):
         main_widget = QWidget(self)
         self.setCentralWidget(main_widget)
         # set layout
-        hbox = ui_hbox_label_combobox_btn(self, 'Test', self.bind_options)
+        hbox = ui_hbox_label_combobox_btn(self, '/hideout <name>', self.bind_options)
         vbox = ui_vbox(align='top')
         vbox.addLayout(hbox)
 
-        hbox_1 = ui_hbox_label_combobox_btn(self, 'Test1', self.bind_options)
+        hbox_1 = ui_vbox_label_input(self, 'Character name:')
+        hbox_2 = ui_vbox_label_input(self, 'League name:', input_default='Sentinel')
+        hbox_3 = ui_vbox_label_input(self, 'Clicker delay:', input_default=0.01)
         vbox_1 = ui_vbox(align='top')
         vbox_1.addLayout(hbox_1)
+        vbox_1.addLayout(hbox_2)
+        vbox_1.addLayout(hbox_3)
 
         # render widget
         groupbox_1 = ui_groupbox('Macros', [270, 10, 251, 291], flat=False)
