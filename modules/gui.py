@@ -1,6 +1,5 @@
 import sys
 
-from PyQt5.QtCore import QCoreApplication, QRect
 from PyQt5.QtWidgets import (
     QApplication,
     QAction,
@@ -22,7 +21,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QIcon, QFont
 
-from modules.gui_utils import ui_groupbox, ui_hbox_label_combobox_btn
+from modules.gui_utils import ui_groupbox, ui_vbox, ui_hbox_label_combobox_btn
 
 
 class MainApp(QMainWindow):
@@ -54,17 +53,22 @@ class MainApp(QMainWindow):
         self.setCentralWidget(main_widget)
         # set layout
         hbox = ui_hbox_label_combobox_btn(self, 'Test', self.bind_options)
-        vbox = QVBoxLayout()
+        vbox = ui_vbox(align='top')
         vbox.addLayout(hbox)
-        vbox.addStretch(3)
+
+        hbox_1 = ui_hbox_label_combobox_btn(self, 'Test1', self.bind_options)
+        vbox_1 = ui_vbox(align='top')
+        vbox_1.addLayout(hbox_1)
 
         # render widget
-        groupbox_1 = ui_groupbox('Macros', QRect(270, 10, 251, 291))
+        groupbox_1 = ui_groupbox('Macros', [270, 10, 251, 291], flat=False)
         groupbox_1.setLayout(vbox)
-        groupbox_2 = ui_groupbox('Options', QRect(0, 10, 261, 291))
+        groupbox_2 = ui_groupbox('Options', [0, 10, 261, 291], flat=False)
+        groupbox_2.setLayout(vbox_1)
         grid = QGridLayout()
         grid.addWidget(groupbox_1, 0, 0)
         grid.addWidget(groupbox_2, 0, 1)
+
         main_widget.setLayout(grid)
 
     def set_main_styles(self) -> None:
