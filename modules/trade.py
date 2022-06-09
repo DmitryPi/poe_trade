@@ -1344,7 +1344,8 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             pyautogui.click(button='right', interval=0.1)  # why?
             for item_coords in give_items:
                 self.mouse_move(*item_coords)
-                self.mouse_move_click(ctrl=True, delay=True)
+                time.sleep(0.05)
+                self.mouse_move_click(ctrl=True)
             self.mouse_move(1350, 500)
         elif given_items_len == give_items_len:
             trade_item = trade_user[3] if trade_user[3] == 'card' else trade_user[4]
@@ -1371,6 +1372,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                     self.check_trade_opened(accept=True)
 
     def manage_trade_sell(self, give_items, trade_user):
+        """TODO: Compare give_items and trade_user amount - prevent overhead trade"""
         give_items_amount = list(dict.fromkeys([pt[2] for pt in give_items]))
         given_items = []
         for item_amount in give_items_amount:  # unique item_amounts
@@ -1385,11 +1387,13 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 return
             for item_coords in give_items:
                 self.mouse_move(*item_coords)
-                self.mouse_move_click(ctrl=True, delay=True)
+                time.sleep(0.05)
+                self.mouse_move_click(ctrl=True)
             self.mouse_move(1350, 500)  # inventory to the left of flasks
         elif given_items_len == give_items_len:  # check trade_user items
-            self.action_confirm_items()  # confirm items before checking
-            self.mouse_move(605, 485)  # middle of the trade window
+            if not self.check_trade_accepted():
+                self.action_confirm_items()  # confirm items before checking
+                self.mouse_move(605, 485)  # middle of the trade window
 
             exalt_price = self.prices[0]['chaos_value']
             take_currency_type = trade_user[1][3]
@@ -1444,7 +1448,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             if exalt_price:
                 self.prices.append({'item_id': 'exalted-orb', 'chaos_value': exalt_price})
             print('- Prices:', self.prices)
-            time.sleep(60)
+            time.sleep(300)
 
     def run_seller(self):
         trade_users = []
@@ -1472,6 +1476,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                     time.sleep(1)
                 # remove alerts + clean inventory
                 self.check_remove_alerts()
+                time.sleep(0.2)
                 self.action_paste_inventory_all()
                 # Set stash prices
                 for summary in trade_summary:
@@ -1495,12 +1500,17 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                     self.set_state('PRETRADE')
                     continue
 
-                log_result = self.log_manage(time_limit=250)
+                # remove alerts
+                # self.check_remove_alerts()
+                # time.sleep(0.2)
+                # self.mouse_move(1350, 500)  # inventory to the left of flasks
+
+                log_result = self.log_manage(time_limit=20)
                 for log in log_result:
                     if log[1][0] != 'buy':
                         continue
                     char_name, buy_item, datetime = log
-                    user_buy_price = buy_item[4] / buy_item[2]
+                    user_buy_price = round(buy_item[4] / buy_item[2], 1)
                     for summary in trade_summary:
                         if summary['item_id'] != buy_item[1]:  # compare id
                             continue
@@ -1515,7 +1525,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             # send sold msg, save trade_user_done
                             if char_name in trade_users_done:
                                 continue
-                            time.sleep(0.5)
+                            time.sleep(0.3)
                             self.action_command_chat(f'@{char_name} sold')
                             trade_users_done.append(char_name)
                         elif summary['item_amount'] >= buy_item[2]:  # item available
@@ -1525,8 +1535,9 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                                 """TODO: check if user updated item_amount"""
                                 continue
                             self.app_window_focus()
-                            time.sleep(0.5)
+                            time.sleep(0.3)
                             print('- Invited ', char_name)
+                            """TODO: If user gave trade to you, you cant trade him"""
                             self.action_command_chat(self.cmd_invite + char_name)
                             trade_users.append(log)
             elif self.STATE == 'PRETRADE':
@@ -1547,11 +1558,11 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 inventory_items = self.check_item(item_id, amount=item_amount, inventory=True)
                 if inventory_items:
                     print('- Inventory items len:', len(inventory_items))
-                    """TODO: fix bug with check_item-double-check items
-                        Double check finds any 10 stack """
+                    """TODO: fix bug with check_item-double-check items - finds any 10 stack"""
                     self.set_state('TRADE')
                     continue
                 else:
+                    """TODO: bug stash_take_item takes too much if items arent visible"""
                     self.stash_take_item(item_id, item_amount)
             elif self.STATE == 'TRADE':
                 # current_trade_user = ('rompatel_sentinel', ('buy', 'rusted-divination-scarab', 30, 'chaos-orb', 35), ('2022/06/04', '11:12:18'))
@@ -1574,13 +1585,14 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                     log_result = self.log_manage(time_limit=5)
                     for res in log_result:
                         if 'accepted' in res:
-                            print('- Trade success')
+                            print('\n- Trade success')
                             trade_opened = False
                             trade_timer = 0
                             trade_users_done.append(current_trade_user[0])
                             trade_users.remove(current_trade_user)
-                            """update trade summary decrement
-                               kick user"""
+                            time.sleep(0.5)
+                            self.action_command_chat('/kick ' + current_trade_user[0])
+                            """update trade summary decrement"""
                             if trade_users:
                                 self.set_state('START')
                             else:
