@@ -359,7 +359,9 @@ class OCRChecker(Base):
         self.crop = {
             "stash": [5, 85, 655, 810],
             "stash_top": [50, 0, 550, 130],
-            "trade": [290, 140, 955, 815],
+            "trade_all": [290, 140, 955, 815],
+            "trade_top": [290, 190, 950, 480],
+            "trade_bottom": [290, 525, 950, 805],
             "inventory": [1260, 575, 1915, 865],
             "party_box": [0, 160, 260, 500],
         }

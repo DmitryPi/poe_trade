@@ -868,11 +868,11 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             self.mouse_move(x_pos + 240, y_pos + 45, delay=True)
             self.mouse_move_click()
 
-    def check_item(self, item_name, amount=0, trade=False, inventory=False):
+    def check_item(self, item_name, amount=0, trade='', inventory=False):
         if inventory:
             crop = self.crop['inventory']
         elif trade:
-            crop = self.crop['trade']
+            crop = self.crop['trade_{}'.format(trade)]  # all/top/bottom
         else:
             crop = []
 
@@ -1330,7 +1330,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
         give_items_amount = list(dict.fromkeys([pt[2] for pt in give_items]))
         given_items = []
         for item_amount in give_items_amount:
-            det_objects = self.check_item(trade_user[-4], amount=item_amount, trade=True)
+            det_objects = self.check_item(trade_user[-4], amount=item_amount, trade='bottom')
             if det_objects:
                 [given_items.append(i) for i in det_objects]
         given_items_len = len(given_items)
@@ -1350,7 +1350,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             trade_user_items = self.check_item(
                 trade_item,
                 amount=trade_user[7],
-                trade=True)
+                trade='top')
             if trade_user_items:
                 validate = True if trade_user[3] == 'card' else False
                 result = self.trade_confirm_items(
@@ -1369,12 +1369,12 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 if len(trade_user_items) >= trade_user[7]:
                     self.check_trade_opened(accept=True)
 
-    def manage_trade_sell(self, give_items, trade_user):
+    def manage_trade_sell(self, give_items: list, trade_user: tuple) -> None:
         """TODO: Compare give_items and trade_user amount - prevent overhead trade"""
         give_items_amount = list(dict.fromkeys([pt[2] for pt in give_items]))
         given_items = []
         for item_amount in give_items_amount:  # unique item_amounts
-            det_objects = self.check_item(trade_user[1][1], amount=item_amount, trade=True)
+            det_objects = self.check_item(trade_user[1][1], amount=item_amount, trade='bottom')
             if det_objects:
                 [given_items.append(i) for i in det_objects]
         given_items_len = len(given_items)
@@ -1400,15 +1400,15 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             take_items = self.check_item(
                 take_currency_type,  # chaos-orb
                 amount=take_currency_amount,
-                trade=True)
+                trade='top')
             if take_currency_amount_rem:
                 remainders = self.check_item(
                     take_currency_type,  # chaos-orb
                     amount=take_currency_amount_rem,
-                    trade=True)
+                    trade='top')
                 [take_items.append(i) for i in remainders]
             # find / calculate exalt sum
-            exalt_sum = self.check_item('exalted-orb', trade=True)
+            exalt_sum = self.check_item('exalted-orb', trade='top')
             exalt_sum = round(exalt_sum * exalt_price) if exalt_sum else 0
             # calculate user given currency amount
             item_sum = sum([i[2] for i in take_items]) + exalt_sum
@@ -1461,7 +1461,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 trade_timer = 0
                 current_trade_user = None
                 inventory_items = []
-                self.set_state('START')
+                self.set_state('TRADE')
                 continue
             elif self.STATE == 'START':
                 """Checks trade_summary and set prices"""
@@ -1563,7 +1563,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                     """TODO: bug stash_take_item takes too much if items arent visible"""
                     self.stash_take_item(item_id, item_amount)
             elif self.STATE == 'TRADE':
-                # current_trade_user = ('rompatel_sentinel', ('buy', 'rusted-divination-scarab', 30, 'chaos-orb', 35), ('2022/06/04', '11:12:18'))
+                # current_trade_user = ('rompatel_sentinel', ('buy', 'rusted-expedition-scarab', 30, 'chaos-orb', 39), ('2022/06/04', '11:12:18'))
                 # inventory_items = [(1290, 613, 10), (1345, 613, 10), (1400, 613, 10)]
                 # inventory_items = [(1290, 613, 10)]
                 # trade with current_trade_user
