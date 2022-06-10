@@ -106,7 +106,8 @@ class KeyActions(Base):
                 detected_objects.append(i)
         detected_objects = sorted(list(dict.fromkeys(detected_objects)))
         for pt in detected_objects:
-            self.mouse_move(pt[0], pt[1], humanlike=False, delay=False)
+            self.mouse_move(pt[0], pt[1], humanlike=True)
+            time.sleep(delay)
 
     def action_trade(self):
         """

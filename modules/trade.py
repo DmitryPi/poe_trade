@@ -1390,7 +1390,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             self.mouse_move(1350, 500)  # inventory to the left of flasks
         elif given_items_len == give_items_len:  # check trade_user items
             if not self.check_trade_accepted():
-                self.action_confirm_items()  # confirm items before checking
+                self.action_confirm_items(delay=0.015)  # confirm items before checking
                 self.mouse_move(605, 485)  # middle of the trade window
 
             exalt_price = self.prices[0]['chaos_value']
@@ -1461,10 +1461,10 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 trade_timer = 0
                 current_trade_user = None
                 inventory_items = []
-                self.set_state('TRADE')
+                self.set_state('START')
                 continue
             elif self.STATE == 'START':
-                """Checks trade_summary and set prices"""
+                """Check trade_summary and set prices"""
                 print('- Done users:', trade_users_done)
                 self.app_window_focus()
 
@@ -1539,6 +1539,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             self.action_command_chat(self.cmd_invite + char_name)
                             trade_users.append(log)
             elif self.STATE == 'PRETRADE':
+                """Prepare inventory items"""
                 current_trade_user = [i for i in trade_users if i[0] in self.hideout_state]
                 if not current_trade_user:
                     print('- Unknown current_trade_user:', self.hideout_state, trade_users)
@@ -1566,11 +1567,16 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 # current_trade_user = ('rompatel_sentinel', ('buy', 'rusted-expedition-scarab', 30, 'chaos-orb', 39), ('2022/06/04', '11:12:18'))
                 # inventory_items = [(1290, 613, 10), (1345, 613, 10), (1400, 613, 10)]
                 # inventory_items = [(1290, 613, 10)]
+
+                # Decline any invite
+                invites = self.check_invite()
+                for invite in invites:
+                    self.game_invite(invite, accept=False)
                 # trade with current_trade_user
                 self.action_command_chat(self.cmd_tradewith + ' ' + current_trade_user[0])
                 # trade operation
                 while self.check_trade_opened():
-                    if trade_timer >= 20:
+                    if trade_timer >= 30:
                         print('- Trade attempt limit reached')
                         pyautogui.press('esc')
                         self.set_state('HIDEOUT')
@@ -1599,6 +1605,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                         elif 'cancelled' in res:
                             print('- Trade cancelled')
                             trade_opened = False
+                            time.sleep(2)  # prevent insta trade invite
             time.sleep(self.main_loop_delay)
 
     def run_buyer(self):
