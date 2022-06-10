@@ -144,9 +144,9 @@ class ClientLog(Base):
             return None
         return (msg_type, char_name, datetime)
 
-    def log_filter_trade_state(self, line: str, accepted=True) -> tuple:
+    def log_filter_trade_state(self, line: str) -> tuple:
         """Return filtered state for trade msg"""
-        msg_type = 'accepted' if accepted else 'cancelled'
+        msg_type = 'accepted' if 'accepted' in line else 'cancelled'
         datetime = self.log_filter_datetime(line)
         if not datetime:
             return None
@@ -168,20 +168,18 @@ class ClientLog(Base):
             for i, line in enumerate(frb):
                 log_res = None
                 if 'INFO' in line:
-                    line = line.lower()
+                    # lower line if not contain @from
                     if not self.log_filter_by_time(line, time_limit=time_limit):
                         break
-                    if '@from' in line:
+                    if re.search(r'\@from', line, flags=re.I):
                         log_res = self.log_build_buy_msg(line)
-                    elif 'has joined' in line or 'has left' in line:
+                    elif re.search(r'has (joined|left)', line, flags=re.I):
                         log_res = self.log_filter_instance_state(line)
-                    elif 'trade accepted' in line:  # todo refactor like previous line
-                        log_res = self.log_filter_trade_state(line, accepted=True)
-                    elif 'trade cancelled' in line:
-                        log_res = self.log_filter_trade_state(line, accepted=False)
-                    elif 'failed to join' in line:
+                    elif re.search(r'trade (accepted|cancelled)', line, flags=re.I):
+                        log_res = self.log_filter_trade_state(line)
+                    elif re.search(r'failed to join', line, flags=re.I):
                         log_res = self.log_filter_trade_error(line, msg_type='error')
-                    elif 'go to this area from here' in line.lower():
+                    elif re.search(r'go to this area from here', line, flags=re.I):
                         log_res = self.log_filter_trade_error(line, msg_type='area_error')
                 if log_res:
                     result.append(log_res)
