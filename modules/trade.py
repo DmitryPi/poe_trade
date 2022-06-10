@@ -1579,6 +1579,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                     if trade_timer >= 30:
                         print('- Trade attempt limit reached')
                         pyautogui.press('esc')
+                        trade_timer = 0
                         self.set_state('HIDEOUT')
                         break
                     self.manage_trade_sell(inventory_items, current_trade_user)
