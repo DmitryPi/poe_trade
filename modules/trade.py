@@ -886,8 +886,8 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 6: 0.9,
                 7: 0.9,
                 8: 0.89,
-                9: 0.9,
-                10: 0.88,
+                9: 0.89,
+                10: 0.87,
             }
             template = f'assets/items/c_chaos_{amount}_{amount}.png'
             threshold = threshold[amount]
@@ -1476,6 +1476,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 self.check_remove_alerts()
                 time.sleep(0.2)
                 self.action_paste_inventory_all()
+                self.mouse_move(1350, 500)  # inventory to the left of flasks
                 # Set stash prices
                 for summary in trade_summary:
                     if not summary['item_sell_price'] and summary['item_amount'] >= 50:
@@ -1494,14 +1495,12 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 """Check log - invite user"""
                 """TODO: trade_user/_done timely clear
                          add invite_limit"""
+                """- State changed: HIDEOUT
+                - State changed: PRETRADE
+                - Unknown current_trade_user: ['Little_Dude'] [('__LaeLS__', ('buy', 'gilded-breach-scarab', 30, 'chaos-orb', 180), ('2022/06/11', '13:06:48')), ('Digby_Sentinel', ('buy', 'rusted-ambush-scarab', 50, 'chaos-orb', 195), ('2022/06/11', '13:10:54'))]"""
                 if self.hideout_state and trade_users:
                     self.set_state('PRETRADE')
                     continue
-
-                # remove alerts
-                # self.check_remove_alerts()
-                # time.sleep(0.2)
-                # self.mouse_move(1350, 500)  # inventory to the left of flasks
 
                 log_result = self.log_manage(time_limit=20)
                 for log in log_result:
@@ -1573,6 +1572,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 for invite in invites:
                     self.game_invite(invite, accept=False)
                 # trade with current_trade_user
+                """TODO: bug if no trade_opened will spam trade_invite"""
                 self.action_command_chat(self.cmd_tradewith + ' ' + current_trade_user[0])
                 # trade operation
                 while self.check_trade_opened():
@@ -1597,6 +1597,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             trade_users.remove(current_trade_user)
                             time.sleep(0.5)
                             self.action_command_chat('/kick ' + current_trade_user[0])
+                            current_trade_user = []
                             """update trade summary decrement"""
                             if trade_users:
                                 self.set_state('START')
