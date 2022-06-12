@@ -749,7 +749,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
         self.STATE = status
         print(f'\n- State changed: {status}')
 
-    def update_trade_summary(self, trade_item_id: str, amount: int) -> None:
+    def update_trade_summary(self, trade_item_id: str, amount: int, decr=False) -> None:
         """Create trade_summary if not exist; create summary template/update item_amount"""
         if not os.path.exists(self.trade_summary_path):
             with open(self.trade_summary_path, 'w', encoding='utf-8') as f:
@@ -766,7 +766,10 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
         """Update trade_item_amount"""
         for trade_item in data:
             if trade_item['item_id'] == trade_item_id:
-                trade_item['item_amount'] += int(amount)
+                if decr:
+                    trade_item['item_amount'] -= int(amount)
+                else:
+                    trade_item['item_amount'] += int(amount)
                 self.update_json_file(data, self.trade_summary_path)
                 print('- Trade summary updated')
                 return
@@ -1605,10 +1608,14 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             trade_opened = False
                             trade_users_done.append(trade_user_name + '%' + str(datetime.now()))
                             trade_users.remove(current_trade_user)
-                            time.sleep(0.5)
-                            current_trade_user = []
+                            self.update_trade_summary(
+                                current_trade_user[1][1],  # item_id
+                                current_trade_user[1][2],  # item_amount
+                                decr=True)
+                            time.sleep(0.3)
                             """update trade summary decrement"""
                             if trade_users:
+                                current_trade_user = None
                                 self.action_command_chat('/kick ' + trade_user_name)
                                 self.set_state('START')
                             else:
