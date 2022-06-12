@@ -1484,7 +1484,9 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             # TODO: remove later when more item_ids
                             continue
                         # item_price in proportion
-                        item_price = str(round((summary['item_buy_price'] + 0.9) * 10)) + '/10'
+                        item_price_incr = 1.5 if summary['item_buy_price'] >= 7 else 0.9
+                        item_price = str(
+                            round((summary['item_buy_price'] + item_price_incr) * 10)) + '/10'
                         self.stash_set_item_price(summary['item_id'], item_price)
                         summary['item_sell_price'] = item_price
                 self.update_json_file(trade_summary, self.trade_summary_path)
@@ -1495,9 +1497,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 """Check log - invite user"""
                 """TODO: trade_user/_done timely clear
                          add invite_limit"""
-                """- State changed: HIDEOUT
-                - State changed: PRETRADE
-                - Unknown current_trade_user: ['Little_Dude'] [('__LaeLS__', ('buy', 'gilded-breach-scarab', 30, 'chaos-orb', 180), ('2022/06/11', '13:06:48')), ('Digby_Sentinel', ('buy', 'rusted-ambush-scarab', 50, 'chaos-orb', 195), ('2022/06/11', '13:10:54'))]"""
                 # check if trade_user[name] in hideout_state
                 if [user for user in trade_users if user[0] in self.hideout_state]:
                     self.set_state('PRETRADE')
@@ -1535,7 +1534,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             self.app_window_focus()
                             time.sleep(0.3)
                             print('- Invited ', char_name)
-                            """TODO: If user gave trade to you, you cant trade him"""
                             self.action_command_chat(self.cmd_invite + char_name)
                             trade_users.append(log)
             elif self.STATE == 'PRETRADE':
@@ -1557,7 +1555,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 inventory_items = self.check_item(item_id, amount=item_amount, inventory=True)
                 if inventory_items:
                     print('- Inventory items len:', len(inventory_items))
-                    """TODO: fix bug with check_item-double-check items - finds any 10 stack"""
                     self.set_state('TRADE')
                     continue
                 else:
@@ -1610,7 +1607,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                         elif 'cancelled' in res:
                             print('- Trade cancelled')
                             trade_opened = False
-                            time.sleep(2)  # prevent insta trade invite
+                            time.sleep(1.5)  # prevent insta trade invite
             time.sleep(self.main_loop_delay)
 
     def run_buyer(self):
