@@ -1,5 +1,5 @@
-import time
 import numpy as np
+import pyautogui
 
 
 def wind_mouse(
@@ -13,7 +13,7 @@ def wind_mouse(
     M_0 - maximum step size (velocity clip threshold)
     D_0 - distance where wind behavior changes from random to damped
     '''
-    # pyautogui.PAUSE = 0.001
+    pyautogui.PAUSE = delay
     sqrt3 = np.sqrt(3)
     sqrt5 = np.sqrt(5)
     current_x, current_y = start_x, start_y
@@ -45,7 +45,6 @@ def wind_mouse(
             # This should wait for the mouse polling interval
             if delay:  # pyautogui func moveTo
                 move_mouse(current_x := move_x, current_y := move_y)
-                time.sleep(delay)
             else:  # win32api func SetCursorPos
                 move_mouse((current_x := move_x, current_y := move_y))
     return current_x, current_y
