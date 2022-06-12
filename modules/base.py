@@ -229,6 +229,7 @@ class Base:
             pos_x, pos_y = pyautogui.position()
             delay = 0.01 if delay else 0
             if delay:
+                pyautogui.PAUSE = delay
                 wind_mouse(pos_x, pos_y, x, y, delay=delay, move_mouse=pyautogui.moveTo)
             else:
                 wind_mouse(pos_x, pos_y, x, y, delay=delay, move_mouse=win32api.SetCursorPos)

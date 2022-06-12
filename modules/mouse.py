@@ -1,5 +1,4 @@
 import numpy as np
-import pyautogui
 
 
 def wind_mouse(
@@ -13,7 +12,6 @@ def wind_mouse(
     M_0 - maximum step size (velocity clip threshold)
     D_0 - distance where wind behavior changes from random to damped
     '''
-    pyautogui.PAUSE = delay
     sqrt3 = np.sqrt(3)
     sqrt5 = np.sqrt(5)
     current_x, current_y = start_x, start_y
