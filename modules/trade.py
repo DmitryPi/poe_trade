@@ -1498,7 +1498,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             round((summary['item_buy_price'] + item_price_incr) * 10)) + '/10'
                         self.stash_set_item_price(summary['item_id'], item_price)
                         summary['item_sell_price'] = item_price
-                self.update_json_file(trade_summary, self.trade_summary_path)
+                        self.update_json_file(trade_summary, self.trade_summary_path)
                 trade_summary = self.load_json_file(self.trade_summary_path)
                 self.set_state('HIDEOUT')
                 continue
@@ -1512,8 +1512,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 # filter trade_users_done by time and remove old ones
                 trade_users_done = [
                     i for i in trade_users_done if self.filter_trade_users_done(i, time_limit=60)]
-                if trade_users_done:
-                    print('- Done users:', trade_users_done)
                 # filter log buy messages and send party invite/sold
                 log_result = self.log_manage(time_limit=50)
                 for log in log_result:
@@ -1530,11 +1528,13 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             print('- User {} changed sell price'.format(char_name))
                             trade_users_done.append(char_name + '%' + str(datetime.now()))
                             continue
+
+                        check_user_in_done = [i for i in trade_users_done if char_name in i]
+                        if check_user_in_done:
+                            continue
+
                         # Sold / Invite logic
                         if summary['item_amount'] < buy_item[2]:  # item sold
-                            # send sold msg, save trade_user_done
-                            if char_name in trade_users_done:
-                                continue
                             time.sleep(0.3)
                             self.action_command_chat(f'@{char_name} sold')
                             trade_users_done.append(char_name + '%' + str(datetime.now()))
@@ -1545,11 +1545,11 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                                 """TODO: check if user updated item_amount"""
                                 continue
                             self.app_window_focus()
-                            time.sleep(0.3)
+                            time.sleep(1)
                             print('- Invited ', char_name)
                             self.action_command_chat(self.cmd_invite + char_name)
                             trade_users.append(log)
-                time.sleep(1.5)
+                time.sleep(0.5)
             elif self.STATE == 'PRETRADE':
                 """Prepare inventory items"""
                 current_trade_user = [i for i in trade_users if i[0] in self.hideout_state]
@@ -1612,8 +1612,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                                 current_trade_user[1][1],  # item_id
                                 current_trade_user[1][2],  # item_amount
                                 decr=True)
-                            time.sleep(0.3)
-                            """update trade summary decrement"""
                             if trade_users:
                                 current_trade_user = None
                                 self.action_command_chat('/kick ' + trade_user_name)
@@ -1621,7 +1619,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             else:
                                 self.action_command_chat('/kick ' + self.char_name)
                                 self.set_state(None)
-                            continue
+                            break
                         elif 'cancelled' in res:
                             print('- Trade cancelled')
                             trade_opened = False
