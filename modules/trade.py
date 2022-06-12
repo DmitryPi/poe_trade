@@ -1549,7 +1549,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             print('- Invited ', char_name)
                             self.action_command_chat(self.cmd_invite + char_name)
                             trade_users.append(log)
-                time.sleep(0.5)
+                time.sleep(1.5)
             elif self.STATE == 'PRETRADE':
                 """Prepare inventory items"""
                 current_trade_user = [i for i in trade_users if i[0] in self.hideout_state]
