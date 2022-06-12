@@ -1298,6 +1298,13 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             else:
                 return [detected_objects[-1]]
 
+    def filter_trade_users_done(self, user_done: str, time_limit=60) -> str:
+        """Filter user_done by time_limit;"""
+        user_done_passed = datetime.now() - datetime.fromisoformat(user_done.split('%')[1])
+        if user_done_passed.seconds >= time_limit:
+            return None
+        return user_done
+
     def manage_invites(self, trade=False, party=False):
         invites = self.check_invite(check_type=True)
         for invite in invites:
@@ -1456,7 +1463,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
         while True:
             if not self.STATE:
                 trade_users.clear()
-                trade_users_done.clear()
+                # trade_users_done.clear()
                 trade_opened = False
                 trade_timer = 0
                 current_trade_user = None
@@ -1465,7 +1472,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 continue
             elif self.STATE == 'START':
                 """Check trade_summary and set prices"""
-                print('- Done users:', trade_users_done)
                 self.app_window_focus()
 
                 # Open stash
@@ -1494,19 +1500,23 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 self.set_state('HIDEOUT')
                 continue
             elif self.STATE == 'HIDEOUT':
-                """Check log - invite user"""
-                """TODO: trade_user/_done timely clear
-                         add invite_limit"""
+                """Check log - filter trade_users_done - invite user"""
+                """TODO: party invite_limit"""
                 # check if trade_user[name] in hideout_state
                 if [user for user in trade_users if user[0] in self.hideout_state]:
                     self.set_state('PRETRADE')
                     continue
-
-                log_result = self.log_manage(time_limit=20)
+                # filter trade_users_done by time and remove old ones
+                trade_users_done = [
+                    i for i in trade_users_done if self.filter_trade_users_done(i, time_limit=60)]
+                if trade_users_done:
+                    print('- Done users:', trade_users_done)
+                # filter log buy messages and send party invite/sold
+                log_result = self.log_manage(time_limit=50)
                 for log in log_result:
                     if log[1][0] != 'buy':
                         continue
-                    char_name, buy_item, datetime = log
+                    char_name, buy_item, timestamp = log
                     user_buy_price = round(buy_item[4] / buy_item[2], 1)
                     for summary in trade_summary:
                         if summary['item_id'] != buy_item[1]:  # compare id
@@ -1514,8 +1524,8 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                         if user_buy_price < eval(str(summary['item_sell_price'])):
                             if char_name in trade_users_done:
                                 continue
-                            print('- User changed sell price')
-                            trade_users_done.append(char_name)
+                            print('- User {} changed sell price'.format(char_name))
+                            trade_users_done.append(char_name + '%' + str(datetime.now()))
                             continue
                         # Sold / Invite logic
                         if summary['item_amount'] < buy_item[2]:  # item sold
@@ -1524,7 +1534,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                                 continue
                             time.sleep(0.3)
                             self.action_command_chat(f'@{char_name} sold')
-                            trade_users_done.append(char_name)
+                            trade_users_done.append(char_name + '%' + str(datetime.now()))
                         elif summary['item_amount'] >= buy_item[2]:  # item available
                             # send party invite, save trade_user
                             check_user_in = [i for i in trade_users if i[0] == char_name]
@@ -1536,6 +1546,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             print('- Invited ', char_name)
                             self.action_command_chat(self.cmd_invite + char_name)
                             trade_users.append(log)
+                time.sleep(0.5)
             elif self.STATE == 'PRETRADE':
                 """Prepare inventory items"""
                 current_trade_user = [i for i in trade_users if i[0] in self.hideout_state]
@@ -1565,13 +1576,14 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 # inventory_items = [(1290, 613, 10), (1345, 613, 10), (1400, 613, 10)]
                 # inventory_items = [(1290, 613, 10)]
 
+                trade_user_name = current_trade_user[0]
                 # Decline any invite
                 invites = self.check_invite()
                 for invite in invites:
                     self.game_invite(invite, accept=False)
                 # trade with current_trade_user
                 """TODO: bug if no trade_opened will spam trade_invite"""
-                self.action_command_chat(self.cmd_tradewith + ' ' + current_trade_user[0])
+                self.action_command_chat(self.cmd_tradewith + ' ' + trade_user_name)
                 # trade operation
                 while self.check_trade_opened():
                     if trade_timer >= 30:
@@ -1589,11 +1601,10 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                     for res in log_result:
                         if 'accepted' in res:
                             print('\n- Trade success')
-                            trade_opened = False
                             trade_timer = 0
-                            trade_users_done.append(current_trade_user[0])
+                            trade_opened = False
+                            trade_users_done.append(trade_user_name + '%' + str(datetime.now()))
                             trade_users.remove(current_trade_user)
-                            trade_user_name = current_trade_user[0]
                             time.sleep(0.5)
                             current_trade_user = []
                             """update trade summary decrement"""
