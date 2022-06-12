@@ -681,7 +681,7 @@ class Trader(TradeDB, Base):
                         self.smart_whispers(db_conn, response, trade_item)
                     time.sleep(4)
                 except Exception as e:
-                    sleep_duration = 60
+                    sleep_duration = 30
                     api_err_msg = "Can't access Trade API\n"
                     api_overuse_msg = api_err_msg + f'API overuse - Sleep {sleep_duration}s'
                     if 'result' in repr(e) or 'id' in repr(e) or '429' in repr(e):
