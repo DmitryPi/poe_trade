@@ -1390,7 +1390,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
             self.mouse_move(1350, 500)  # inventory to the left of flasks
         elif given_items_len == give_items_len:  # check trade_user items
             if not self.check_trade_accepted():
-                self.action_confirm_items(delay=0.015)  # confirm items before checking
+                self.action_confirm_items(delay=0.02)  # confirm items before checking
                 self.mouse_move(605, 485)  # middle of the trade window
 
             exalt_price = self.prices[0]['chaos_value']
@@ -1484,7 +1484,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             # TODO: remove later when more item_ids
                             continue
                         # item_price in proportion
-                        item_price = str(round((summary['item_buy_price'] + 1.5) * 10)) + '/10'
+                        item_price = str(round((summary['item_buy_price'] + 0.9) * 10)) + '/10'
                         self.stash_set_item_price(summary['item_id'], item_price)
                         summary['item_sell_price'] = item_price
                 self.update_json_file(trade_summary, self.trade_summary_path)
@@ -1498,7 +1498,8 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 """- State changed: HIDEOUT
                 - State changed: PRETRADE
                 - Unknown current_trade_user: ['Little_Dude'] [('__LaeLS__', ('buy', 'gilded-breach-scarab', 30, 'chaos-orb', 180), ('2022/06/11', '13:06:48')), ('Digby_Sentinel', ('buy', 'rusted-ambush-scarab', 50, 'chaos-orb', 195), ('2022/06/11', '13:10:54'))]"""
-                if self.hideout_state and trade_users:
+                # check if trade_user[name] in hideout_state
+                if [user for user in trade_users if user[0] in self.hideout_state]:
                     self.set_state('PRETRADE')
                     continue
 
@@ -1595,13 +1596,15 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                             trade_timer = 0
                             trade_users_done.append(current_trade_user[0])
                             trade_users.remove(current_trade_user)
+                            trade_user_name = current_trade_user[0]
                             time.sleep(0.5)
-                            self.action_command_chat('/kick ' + current_trade_user[0])
                             current_trade_user = []
                             """update trade summary decrement"""
                             if trade_users:
+                                self.action_command_chat('/kick ' + trade_user_name)
                                 self.set_state('START')
                             else:
+                                self.action_command_chat('/kick ' + self.char_name)
                                 self.set_state(None)
                             continue
                         elif 'cancelled' in res:
