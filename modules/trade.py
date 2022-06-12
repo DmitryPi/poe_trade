@@ -1510,7 +1510,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                     self.set_state('PRETRADE')
                     continue
                 # filter trade_users_done by time and remove old ones
-                trade_users_done = [
+                trade_users_done[:] = [
                     i for i in trade_users_done if self.filter_trade_users_done(i, time_limit=60)]
                 # filter log buy messages and send party invite/sold
                 log_result = self.log_manage(time_limit=50)
