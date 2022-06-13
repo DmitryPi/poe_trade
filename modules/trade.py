@@ -1641,6 +1641,11 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
         loading = False
         timer = 0
 
+        try:  # remove trade_summary on start
+            os.remove(self.trade_summary_path)
+        except FileNotFoundError:
+            pass
+
         while True:
             if not self.STATE:
                 current_trade_user = None
