@@ -1638,21 +1638,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
         loading = False
         timer = 0
 
-        try:  # remove trade_summary on bot init
-            os.remove(self.trade_summary_path)
-            # trade_summary = self.load_json_file(self.trade_summary_path)
-            # if trade_summary:
-            #     for summary in trade_summary:
-            #         print(summary)
-            #         summary.update({
-            #             'item_amount': 0,
-            #             'item_buy_price': 0,
-            #             'item_sell_price': 0
-            #         })
-            #     self.update_json_file(trade_summary, self.trade_summary_path)
-        except FileNotFoundError:
-            pass
-
         while True:
             if not self.STATE:
                 current_trade_user = None
