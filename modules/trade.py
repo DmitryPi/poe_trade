@@ -1451,11 +1451,14 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
 
     def manage_prices(self):
         while True:
-            self.prices.clear()
-            exalt_price = self.get_ninja_exalt_price()
-            if exalt_price:
-                self.prices.append({'item_id': 'exalted-orb', 'chaos_value': exalt_price})
-            print('- Prices:', self.prices)
+            try:
+                exalt_price = self.get_ninja_exalt_price()
+                if exalt_price:
+                    self.prices.clear()
+                    self.prices.append({'item_id': 'exalted-orb', 'chaos_value': exalt_price})
+                print('- Prices:', self.prices)
+            except Exception as e:
+                print('- Error manage_prices:', repr(e))
             time.sleep(300)
 
     def run_seller(self):
