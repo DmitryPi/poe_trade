@@ -1,6 +1,7 @@
 from PyQt5.QtCore import Qt, QCoreApplication, QRect
 from PyQt5.QtWidgets import (
     QComboBox,
+    QDoubleSpinBox,
     QGroupBox,
     QLabel,
     QLineEdit,
@@ -45,7 +46,7 @@ def ui_hbox() -> object:
     return hbox
 
 
-def ui_vbox(align='top') -> object:
+def ui_vbox(align='top') -> QVBoxLayout:
     """Build vertical box with alignment"""
     alignments = {
         'top': Qt.AlignTop,
@@ -57,7 +58,7 @@ def ui_vbox(align='top') -> object:
     return vbox
 
 
-def ui_hbox_label_combobox_btn(instance: object, label: str, combo_options: list) -> object:
+def ui_hbox_label_combobox_btn(instance: object, label: str, combo_options: list[str]) -> QHBoxLayout:
     """Build horizontal box row with: label, combobox, toggle btn"""
     # label
     label = QLabel(label, instance)
@@ -79,7 +80,7 @@ def ui_hbox_label_combobox_btn(instance: object, label: str, combo_options: list
     return hbox
 
 
-def ui_vbox_label_input(instance: object, label: str, input_default='') -> object:
+def ui_vbox_label_input(instance: object, label: str, input_default='') -> QVBoxLayout:
     """Build vertical box with: label, input field(line-edit)"""
     # label
     label = QLabel(label, instance)
@@ -91,4 +92,21 @@ def ui_vbox_label_input(instance: object, label: str, input_default='') -> objec
     vbox = ui_vbox()
     vbox.addWidget(label)
     vbox.addWidget(line_edit)
+    return vbox
+
+
+def ui_vbox_label_spinbox(
+        instance: object, label: str, spin_step=0.01, spin_range=[0.01, 0.5]) -> QVBoxLayout:
+    """Build vertical box with: label, spinbox"""
+    # label
+    label = QLabel(label, instance)
+    # spinbox field
+    dspinbox = QDoubleSpinBox()
+    dspinbox.setRange(*spin_range)
+    dspinbox.setSingleStep(spin_step)
+    dspinbox.setDecimals(2)
+    # horizonal box
+    vbox = ui_vbox()
+    vbox.addWidget(label)
+    vbox.addWidget(dspinbox)
     return vbox

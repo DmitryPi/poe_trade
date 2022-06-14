@@ -1469,7 +1469,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
         while True:
             if not self.STATE:
                 trade_users.clear()
-                # trade_users_done.clear()
                 trade_opened = False
                 trade_timer = 0
                 current_trade_user = None

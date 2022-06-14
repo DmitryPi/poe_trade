@@ -25,6 +25,7 @@ from modules.gui_utils import (
     ui_vbox,
     ui_hbox_label_combobox_btn,
     ui_vbox_label_input,
+    ui_vbox_label_spinbox,
 )
 
 
@@ -62,7 +63,7 @@ class MainApp(QMainWindow):
 
         hbox_1 = ui_vbox_label_input(self, 'Character name:')
         hbox_2 = ui_vbox_label_input(self, 'League name:', input_default='Sentinel')
-        hbox_3 = ui_vbox_label_input(self, 'Clicker delay:', input_default=0.01)
+        hbox_3 = ui_vbox_label_spinbox(self, 'Clicker delay:')
         vbox_1 = ui_vbox(align='top')
         vbox_1.addLayout(hbox_1)
         vbox_1.addLayout(hbox_2)
