@@ -890,7 +890,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 7: 0.9,
                 8: 0.89,
                 9: 0.89,
-                10: 0.87,
+                10: 0.84,
             }
             template = f'assets/items/c_chaos_{amount}_{amount}.png'
             threshold = threshold[amount]
@@ -1639,11 +1639,6 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
         trade_passed = 0
         loading = False
         timer = 0
-
-        try:  # remove trade_summary on start
-            os.remove(self.trade_summary_path)
-        except FileNotFoundError:
-            pass
 
         while True:
             if not self.STATE:
