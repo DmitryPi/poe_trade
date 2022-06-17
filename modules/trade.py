@@ -890,7 +890,7 @@ class TradeBot(Prices, ClientLog, Trader, KeyActions, OCRChecker):
                 7: 0.9,
                 8: 0.89,
                 9: 0.89,
-                10: 0.84,
+                10: 0.88,
             }
             template = f'assets/items/c_chaos_{amount}_{amount}.png'
             threshold = threshold[amount]
