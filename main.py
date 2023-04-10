@@ -132,9 +132,7 @@ if __name__ == "__main__":
     start = datetime.now()
 
     trade_item_files = [
-        "trade_items.json",
-        "slow_items.json",
-        "solo_items.json",
+        "trade_items_1.json",
     ]
     key_presser = KeyPresser()
 
